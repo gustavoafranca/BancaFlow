@@ -1,0 +1,59 @@
+[AI] skill=config-project args=["--scope","@bancaflow","--frontend-path","apps/web"]
+[AI] Configuração resolvida: scope=@bancaflow, frontend=apps/web:3000, backend=apps/api:4000.
+[CMD] npx --yes create-turbo@latest turbo-template --package-manager npm --skip-install --no-git (cwd=/tmp/config-project-MVUbqC)
+[FILE_DELETE] ../../../../tmp/config-project-MVUbqC (cleanup temp scaffold)
+[RISK] overwriting package.json (package.json)
+[FILE_UPDATE] package.json (package.json)
+[AI] Base do TurboRepo reconciliada com create-turbo (itens copiados: 7).
+[RISK] removing apps/docs (remove default turbo app)
+[FILE_DELETE] apps/docs (remove default turbo app)
+[RISK] removing apps/web (remove default turbo app)
+[FILE_DELETE] apps/web (remove default turbo app)
+[RISK] removing packages/ui (remove default turbo package)
+[FILE_DELETE] packages/ui (remove default turbo package)
+[AI] Projetos padrão do Turbo removidos antes do bootstrap: apps/docs, apps/web, packages/ui.
+[CMD] npx create-next-app@latest web --yes --use-npm --src-dir (cwd=/home/gustavo/Projetos/BancaFlow/apps)
+[AI] Frontend criado em apps/web.
+[CMD] nest new api --skip-git --package-manager npm (cwd=/home/gustavo/Projetos/BancaFlow/apps)
+[AI] Backend criado em apps/api.
+[RISK] overwriting apps/api/package.json (package.json)
+[FILE_UPDATE] apps/api/package.json (package.json)
+[RISK] overwriting apps/web/package.json (package.json)
+[FILE_UPDATE] apps/web/package.json (package.json)
+[RISK] overwriting packages/eslint-config/package.json (package.json)
+[FILE_UPDATE] packages/eslint-config/package.json (package.json)
+[RISK] overwriting packages/typescript-config/package.json (package.json)
+[FILE_UPDATE] packages/typescript-config/package.json (package.json)
+[AI] Namespace sincronizado em 4 pacotes do workspace.
+[AI] Dependência turbo já presente na raiz.
+[CMD] npm install -D ts-node (cwd=/home/gustavo/Projetos/BancaFlow)
+[AI] Dependência ts-node instalada na raiz.
+[AI] Dependência prettier já presente na raiz.
+[CMD] npm install dotenv (cwd=/home/gustavo/Projetos/BancaFlow/apps/api)
+[AI] Dependência dotenv instalada em apps/api.
+[RISK] overwriting package.json (package.json)
+[FILE_UPDATE] package.json (package.json)
+[AI] package.json da raiz atualizado incrementalmente.
+[FILE_CREATE] .prettierrc (.prettierrc)
+[AI] .prettierrc criado na raiz do repositório.
+[RISK] overwriting apps/api/package.json (package.json)
+[FILE_UPDATE] apps/api/package.json (package.json)
+[AI] apps/api/package.json atualizado.
+[RISK] overwriting turbo.json (turbo.json)
+[FILE_UPDATE] turbo.json (turbo.json)
+[AI] turbo.json atualizado incrementalmente.
+[RISK] overwriting apps/web/next.config.ts (next.config.ts)
+[FILE_UPDATE] apps/web/next.config.ts (next.config.ts)
+[AI] apps/web/next.config.ts atualizado com images.remotePatterns para http/https.
+[RISK] overwriting apps/api/src/main.ts (backend main.ts)
+[FILE_UPDATE] apps/api/src/main.ts (backend main.ts)
+[AI] apps/api/src/main.ts atualizado (dotenv/cors/porta).
+[FILE_CREATE] apps/web/.env.example (.env.example)
+[FILE_CREATE] apps/web/.env (.env)
+[FILE_CREATE] apps/api/.env.example (.env.example)
+[FILE_CREATE] apps/api/.env (.env)
+[AI] Arquivos de ambiente atualizados: apps/web/.env.example, apps/web/.env, apps/api/.env.example, apps/api/.env.
+[AI] Inicialização do TurboRepo concluída em modo idempotente.
+[CMD] npm run format (cwd=/home/gustavo/Projetos/BancaFlow)
+[AI] Projeto formatado com Prettier (npm run format).
+[AI] skill=config-project completed successfully
