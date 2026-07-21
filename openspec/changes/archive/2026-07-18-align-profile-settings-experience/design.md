@@ -1,0 +1,80 @@
+## Context
+
+Inspeção do código atual (2026-07-18) confirmou, com evidência direta:
+
+- `apps/web/src/app/(private)/_shell/app-navbar.tsx:245-246` renderiza **Meu Perfil** e **Configurações** como `<DropdownItem c={c} icon={...} label="..." />` sem `href` nem `onClick` — `DropdownItem` (linhas 273-303) é um `<div onClick={onClick}>` puro, e `onClick` é opcional; sem ele, o clique não navega e não fecha o dropdown (o dropdown só fecha hoje pelo backdrop fixo, linhas 61-66). Os itens "Sair"/"Sair de todos os dispositivos" no mesmo componente já passam `onClick` real (linhas 249-262), então o padrão de fechar o dropdown ao agir já existe e será reaproveitado, não inventado.
+- `apps/web/src/app/(private)/_shell/app-sidebar.tsx:22-29` não lista `/perfil` nem `/configuracoes` em `MENU` — não há entrada equivalente a auditar no menu lateral; o escopo do prompt sobre "auditar o menu lateral" está satisfeito por esta constatação (nada a remover lá).
+- `apps/web/src/modules/perfil/pages/perfil.page.tsx` já tem "Informações" (nome/e-mail editáveis via `updateOwnProfile`, `PATCH /api/auth/me`, com concorrência otimista; username/papel/Banca somente leitura) ligada a dados reais de `useCurrentUser()`. O hero card com "Membro desde" (linha ~439, `"Jan 2024"`), "Último acesso" (linha ~447, `"Hoje, 14:32"`) e estatísticas (linhas ~462-470, `147`/`2`/`18`) são literais hardcoded. As linhas 428-432 já têm um comentário próprio dizendo que são "valores fixos demonstrativos... nunca tratar como dado real". A aba Segurança (2FA local via `useState`, troca de senha sem `onClick`, "Sessões Ativas" de `perfil.sample.ts` sem `onClick` no botão "Revogar") e a aba Atividade (log de `perfil.sample.ts`) não têm nenhum lastro em endpoint real.
+- `apps/web/src/modules/configuracoes/` não faz nenhuma chamada HTTP (confirmado por grep `fetch|axios|http` = zero ocorrências). `configuracoes.sample.ts` fabrica `USUARIOS`, `PROFILE_USERS`, `TURNOS` e os 4 "perfis" (Administrador/Operador/Cambista/Somente Leitura, D38 do plano 08 já trata isso como não-requisito). `lib/permissions.ts` tem `PERM_MODS` (10 módulos, incluindo `premios`) divergente do array interno `mods` usado em `buildDefaultPerms()` (9 módulos, com `taloes` no lugar de `premios`) — bug real e pré-existente: como a checagem de chip usa `curPerms[key] !== false` (linha ~404), a ausência da chave `premios.*` faz a linha "Prêmios e Reclamações" aparecer como liberada para todos os perfis, inclusive "Somente Leitura". Botões "Salvar Alterações" (linha 574) e edição de formulário (`defaultValue` não controlado) não persistem nada; "Excluir" só fecha o drawer.
+- Este é exatamente o estado que os planos 08 (INC-02/INC-03, `DISCOVERY`) e 09 (INC-04, bloqueado por D44 `OPEN`) ainda não substituíram por capability real — ver `.docs/plans/foundation/08-...md` e `.docs/plans/foundation/09-...md`.
+- `node_modules/next/dist/docs/01-app/03-api-reference/02-components/link.md` (consultado nesta execução, por exigência do prompt/AGENTS.md) confirma, para esta versão do Next.js (App Router, `v13+`): `<Link>` não exige mais filho `<a>`; aceita `onNavigate` (a partir de `v15.3.0`) como handler chamado durante a navegação client-side — mecanismo apropriado para fechar o dropdown no mesmo evento que dispara a navegação, sem duplicar lógica de roteamento.
+- **Correção de achado (revisão pós-implementação, 2026-07-19):** a afirmação original de que `http://farizeu.localhost:3000` estava bloqueado por uma regressão de `restore-localhost-tenant-routing` era factualmente incorreta. Verificado nesta execução, com o ambiente de dev local já no ar: `GET /api/tenant-context` com `Host: farizeu.localhost` retorna `{"available":true}`, e `GET /` com o mesmo host retorna `307` para `/login` (não `/unavailable`). O `.env` de dev real já usa `BANCA_HOST_SUFFIX=".localhost"` — apenas `apps/backend/.env.example` ainda documentava `.bancaflow.com.br` como default, divergindo do ambiente real. Não existe hoje nenhuma dependência de correção de tenant bloqueando esta change; a dependência `restore-localhost-tenant-routing` é removida dos artefatos.
+- `farizeu` é a Banca de seed geral de desenvolvimento (`apps/backend/prisma/seed/tasks/provision-farizeu.seed.ts`), não um tenant isolado de teste — não deve ser destruída/recriada por um seed automatizado de E2E. `pw-e2e` (`apps/backend/scripts/seed-e2e-playwright.ts`) já existe exatamente para esse propósito: tenant descartável, recriado do zero a cada execução, com trava de segurança (`NODE_ENV` dev/test, `ALLOW_E2E_SEED=true`, `DATABASE_URL` local) e já consumido por `login-to-dashboard.e2e.spec.ts`.
+
+## Goals / Non-Goals
+
+**Goals:**
+- Tornar **Meu Perfil** navegação real (`next/link`) para `/perfil`, igual para `OWNER`/`ADMIN`/`USER`, acessível por teclado, fechando o dropdown.
+- Remover a aparência clicável de **Configurações** no mesmo dropdown enquanto não houver capability real por trás da rota.
+- Remover de `/perfil` tudo que não tem lastro em `UserAccount`/`GET /api/auth/me` hoje: hero estático, estatísticas, 2FA, sessões e atividade de `perfil.sample.ts`.
+- Substituir o conteúdo de `/configuracoes` por um estado honesto de "capability pendente", preservando a rota acessível e segura.
+- Manter os testes verdes e cobrindo os comportamentos novos/removidos.
+
+**Non-Goals:**
+- Não implementar INC-02/INC-03 (administração de usuários) nem INC-04 (catálogo de permissões).
+- Não alterar o algoritmo do `TenantResolverMiddleware`, a fronteira de confiança de `X-Forwarded-Host`, proxy/CIDRs ou regras de segurança de resolução de tenant — apenas reconciliar exemplo/documentação de configuração local (`.env.example`, `e2e/README.md`) quando divergirem do comportamento real.
+- Não alterar nenhum contrato de Backend/Prisma/domínio (além do exemplo de configuração citado acima).
+- Não introduzir autorização baseada em `currentUser.role` no Web como mecanismo de segurança.
+
+## Decisions
+
+### Decisão 1 — "Meu Perfil" vira `<Link>`, não `<button onClick={router.push}>`
+`DropdownItem` ganha suporte a `href?: string` opcional; quando presente, renderiza `<Link href={href} onNavigate={() => setProfileOpen(false)}>` envolvendo o conteúdo atual do item, em vez do `<div onClick>` atual. Quando `href` não é passado (caso de itens de ação como "Sair"), o comportamento atual com `onClick` é preservado sem mudança.
+- **Alternativa considerada:** manter `<div>` com `onClick={() => router.push('/perfil')}`. Rejeitada — perde semântica de link real (sem `href` navegável por "abrir em nova aba"/hover de prefetch, pior para leitores de tela e para SEO/acessibilidade do próprio App Router), e o prompt exige "semântica real de link/navegação".
+- **Por que `onNavigate` e não `onClick` no `<Link>`:** conforme a documentação local consultada, `onNavigate` executa especificamente durante a navegação client-side (não em cliques com modificador `Ctrl`/`Cmd`, que abrem nova aba e não devem fechar o dropdown da aba atual); `onClick` executaria para todo clique, inclusive os que não navegam nesta janela, fechando o dropdown incorretamente.
+- **Fechar por teclado:** `<Link>` renderiza `<a>` focável nativamente; ativar por `Enter` dispara o mesmo evento de navegação e o mesmo `onNavigate`, sem necessidade de handler de teclado adicional.
+
+### Decisão 2 — "Configurações" perde a aparência interativa, não é removida do DOM
+O item **Configurações** deixa de usar `DropdownItem` clicável e passa a ser renderizado sem `role="menuitem"`/foco de teclado e sem cursor de ponteiro (ex.: texto simples com indicação visual de indisponibilidade, ou removido da lista de itens do dropdown). A rota `/configuracoes` continua existindo e acessível por URL direta.
+- **Alternativa considerada:** manter o item, mas navegando para `/configuracoes` (que passaria a mostrar o novo estado honesto). Rejeitada explicitamente pelo prompt (D3): "não deve ser transformado em navegação funcional nesta change" — a existência de um estado honesto na página não torna a entrada de menu uma jornada aprovada; evita reabrir, mesmo que involuntariamente, a percepção de que "Configurações" é uma capability pronta.
+- A escolha entre "remover a entrada" e "manter desabilitada visualmente" fica para a tarefa de implementação, guiada por `frontend-module-workflow`/acessibilidade (ex.: item desabilitado com `aria-disabled` é aceitável se comunicar claramente "indisponível", em vez de simplesmente sumir sem explicação) — ambas satisfazem o requisito de não aparentar navegação funcional.
+
+### Decisão 3 — `/perfil`: exclusão de seções, não substituição por outro mock
+Nenhuma seção removida (hero, 2FA, sessões, atividade) ganha um substituto genérico do tipo "em breve" dentro de `/perfil` — o prompt proíbe "inventar dados substitutos". As abas **Segurança** e **Atividade** ficam sem conteúdo próprio; se, após a remoção, uma aba não tiver mais nenhum controle real, a aba em si é removida da navegação por abas (não apenas esvaziada), evitando uma aba vazia que pareça bug.
+- **Consequência prática:** `perfil.sample.ts` fica sem consumidor após a remoção das seções de sessões/atividade — o arquivo é deletado (não apenas desimportado), seguindo a diretriz do projeto de não manter código morto.
+- **Preservado:** Nome/E-mail editáveis, Username/Papel/Banca somente leitura, todos os estados de loading/erro/sucesso/conflito já existentes em "Informações" — nenhum desses é tocado.
+
+### Decisão 4 — `/configuracoes`: um estado honesto único, não uma reforma por submenu
+Em vez de tratar `turnos`/`usuarios`/`perfis`/`whatsapp`/`apis`/`webhooks` como seis problemas independentes, a página passa a exibir um único estado de "capability indisponível" (mensagem acessível, sem branding de erro, sem dado de exemplo, sem drawer/CRUD), pois nenhum desses submenus tem qualquer capability real hoje. Isso evita a armadilha de "consertar" um submenu por vez deixando os outros cinco com mocks — o prompt exige que **nenhum** dos seis apareça como funcional.
+- **Alternativa considerada:** manter a navegação por submenu, mas trocar cada tabela por "em breve". Rejeitada — mantém uma estrutura de IA (informação) que sugere seis capabilities distintas e prestes a chegar, quando na realidade nenhuma tem sequer plano `READY_FOR_SPEC` (usuários é INC-02/INC-03 `DISCOVERY`; perfis é INC-04 `DECISIONS_PENDING`; turnos/whatsapp/apis/webhooks não têm capability mapeada em nenhum plano do roadmap mestre). Um único estado honesto é mais verdadeiro ao que existe hoje.
+- **`configuracoes.sample.ts`, `lib/permissions.ts` e `permissions.spec.ts` são removidos** (não apenas desimportados) — não há requisito de negócio real por trás da matriz de 4 perfis (D38, plano 08) nem da divergência `PERM_MODS`/`mods` (bug do próprio protótipo, não regra a preservar).
+- **Fora desta decisão:** desenhar como será a futura tela quando INC-02/03/04 chegarem — isso pertence às specs futuras dessas changes, não a esta.
+
+### Decisão 5 — Nenhuma nova capability de Backend; navegação e conteúdo não usam `currentUser.role` como enforcement
+Todas as mudanças são Web-only, consumindo dados já expostos por `GET /api/auth/me` (via `useCurrentUser()`/`CurrentUserProvider` já existentes). A visibilidade de **Meu Perfil** não varia por papel (D1 do prompt: autogestão não depende de papel). A ocultação de **Configurações** não é "segurança" — é apenas experiência; se algum dia `/configuracoes` ganhar operações reais, a autorização daquelas operações continua exclusivamente no Backend.
+
+### Decisão 6 — E2E real usa o tenant isolado `pw-e2e.localhost`, não `farizeu.localhost`
+O E2E de `align-profile-settings-experience` (login → menu da conta → **Meu Perfil** → `/perfil`) reaproveita o mesmo tenant/seed já usado por `login-to-dashboard.e2e.spec.ts` (`pw-e2e`, via `seed-e2e-playwright.ts`), em vez de `farizeu.localhost`.
+- **Por quê:** a jornada **Meu Perfil → `/perfil`** é independente do código de Banca — validar com qualquer tenant `.localhost` ativo prova o comportamento igualmente. `farizeu` é a Banca de seed geral de desenvolvimento local, não um tenant descartável; rodar contra ela um seed destrutivo (apagar/recriar sessão/conta/banca a cada execução, como `seed-e2e-playwright.ts` faz) destruiria dados de desenvolvimento em uso, e usar uma credencial fixa conhecida contra uma Banca não isolada é um risco de segurança desnecessário.
+- **Alternativa considerada e rejeitada:** criar um seed separado para `farizeu` especificamente para este E2E. Rejeitada — duplicaria a infraestrutura de seed já existente e madura (`pw-e2e`) só para satisfazer uma menção textual a `farizeu.localhost` que não é, na prática, um requisito de negócio (nenhum comportamento do dropdown/perfil depende do código da Banca).
+- **Papel de `farizeu.localhost`:** permanece como host de smoke test manual do ambiente de desenvolvimento local (confirmado nesta execução: `available: true`, `/` redireciona para `/login`), não como tenant que o runner automatizado de E2E pode destruir ou para o qual deve receber credencial fixa versionada.
+- **Consequência para a documentação:** `e2e/README.md` e `apps/backend/.env.example` são atualizados para distinguir claramente desenvolvimento/E2E (`.localhost`) de produção (`.bancaflow.com.br`), sem alterar o algoritmo de resolução de tenant.
+
+## Risks / Trade-offs
+
+- **[Risco] Remover `perfil.sample.ts`/abas Segurança/Atividade pode parecer regressão visual para quem já viu o protótipo.** → Mitigação: o prompt e o plano 08 (D37, riscos) já tratam esses elementos como não-autoritativos; a change documenta explicitamente o que foi removido e por quê, e os elementos reais (troca de senha via `changePassword()`, revogação via `logoutAll()`) continuam disponíveis como candidatos a changes Web verticais futuras (não perdidos, apenas não ligados incidentalmente aqui).
+- **[Risco] Um único estado honesto em `/configuracoes` pode parecer "regressão de funcionalidade" para stakeholders que viam a tela cheia antes.** → Mitigação: nenhuma dessas telas jamais persistiu dado real; a aparência de funcionalidade era o problema que esta change resolve, não uma capability perdida.
+- **[Risco] `DropdownItem` com `href` pode quebrar consumidores existentes que passam apenas `onClick` (ex.: "Sair").** → Mitigação: `href` é opcional e aditivo; o branch `onClick`-apenas permanece inalterado para os itens de ação.
+- **[Risco] Remover a divergência `PERM_MODS`/`mods` junto com o arquivo inteiro pode ser lido como "corrigir um bug" fora de escopo.** → Mitigação: não se corrige o bug — o arquivo inteiro deixa de existir porque a matriz que ele sustenta não é mais exibida como produto; não há bug a corrigir em código removido.
+- **[Risco] Trocar o hostname do E2E de `farizeu.localhost` para `pw-e2e.localhost` poderia ser lido como enfraquecer o requisito original.** → Mitigação: o requisito verificável é a jornada **Meu Perfil → `/perfil`** funcionar para qualquer tenant `.localhost` ativo, não especificamente para `farizeu`; `pw-e2e.localhost` prova exatamente o mesmo comportamento com isolamento e segurança superiores (tenant descartável vs. Banca de desenvolvimento compartilhada). Ver Decisão 6.
+- **[Risco] Seed destrutivo do E2E (`seed-e2e-playwright.ts`) rodar contra o ambiente errado.** → Mitigação: já existente e reaproveitada sem alteração — trava fail-closed em `NODE_ENV`, `ALLOW_E2E_SEED=true` explícito e `DATABASE_URL` local (ver `assertSafeToSeed`).
+
+## Migration Plan
+
+- Sem migração de schema/dados — mudança inteiramente Web.
+- Ordem recomendada de implementação (detalhada em `tasks.md`, seguindo `frontend-module-workflow`): navegação do shell → reconciliação de `/perfil` → reconciliação de `/configuracoes` → testes → documentação.
+- Rollback: cada arquivo alterado/removido é revertível via `git revert` isolado; não há dado persistido a desfazer.
+
+## Open Questions
+
+Nenhuma pendente para esta change. Pendências explicitamente fora de escopo, já registradas no `proposal.md`: detalhamento de INC-02/INC-03 (plano 08); resolução de D44 e detalhamento de INC-04 (plano 09).

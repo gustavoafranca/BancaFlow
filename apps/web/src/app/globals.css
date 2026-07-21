@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
+/*
+ * Tokens do design system (tarefa 4.1, `web-design-migration`): valores default
+ * (tema escuro — default do app hoje) para as primitives compartilhadas
+ * (`Button`, `Input`, `Table`, `Dialog`, `Badge`). A fonte de verdade real é o
+ * objeto `ThemeColors` em `shared/theme/theme-provider.tsx`: o `ThemeProvider`
+ * sobrescreve estas variáveis via `style` inline com os MESMOS valores (nunca
+ * duplicados) assim que monta. Estes defaults em `:root` só valem para uso fora
+ * de um `ThemeProvider` ativo (ex.: antes da hidratação, ou uma primitive usada
+ * isoladamente sem o provider).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #06110D;
+  --foreground: #F0F5F2;
+  --card: rgba(255,255,255,0.04);
+  --card-foreground: #F0F5F2;
+  --popover: #0D2318;
+  --popover-foreground: #F0F5F2;
+  --border: rgba(255,255,255,0.08);
+  --input: rgba(255,255,255,0.08);
+  --ring: rgba(0,199,115,0.24);
+  --primary: #00C773;
+  --primary-foreground: #FFFFFF;
+  --secondary: rgba(255,255,255,0.06);
+  --secondary-foreground: #F0F5F2;
+  --accent: rgba(0,199,115,0.08);
+  --accent-foreground: #F0F5F2;
+  --muted-foreground: #8BA89A;
+  /*
+   * Vermelho canônico (tarefa 2.2): mesmo tom nos dois temas, como já era o
+   * caso do vermelho de erro/negativo usado em todo o app (`#E05555` cru,
+   * ver relatório de auditoria da change). `#D14343` é uma leve escurecida
+   * dessa mesma cor para garantir >= 4.5:1 com texto branco sólido
+   * (`Button variant="destructive"`): luminância relativa ~0.180, contraste
+   * com branco = (1.0 + 0.05) / (0.180 + 0.05) ≈ 4.57:1 (WCAG AA texto normal).
+   * `-muted`/`-border` são o mesmo tom em baixa opacidade, para fundos e
+   * bordas sutis (alertas, badges), replicando o padrão já usado no app.
+   */
+  --destructive: #D14343;
+  --destructive-foreground: #FFFFFF;
+  --destructive-muted: rgba(209, 67, 67, 0.12);
+  --destructive-border: rgba(209, 67, 67, 0.32);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-muted: var(--destructive-muted);
+  --color-destructive-border: var(--destructive-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-inter: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ═══════════════ BancaFlow — Login (import-cloud-design-next) ═══════════════ */
+@keyframes bf-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes bf-shine {
+  0% { left: -60%; }
+  100% { left: 130%; }
+}
+@keyframes bf-slide-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes bf-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bf-grow-x {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes bf-fade-feat {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.bf-slide-left { animation: bf-slide-left 0.6s ease both; }
+.bf-slide-up { animation: bf-slide-up 0.6s ease both; }
+.bf-grow-x { transform-origin: left; animation: bf-grow-x 0.5s ease 0.35s both; }
+.bf-fade-feat { animation: bf-fade-feat 0.55s ease both; }
+
+/* Gradient headline with animated shimmer */
+.bf-shimmer-text {
+  background: linear-gradient(90deg, #00c773 0%, #00ff99 55%, #00c773 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: bf-shimmer 3.5s linear infinite;
+}
+
+/* Primary CTA: gradient + hover shine sweep */
+.bf-btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(130deg, #007a4d 0%, #00c773 55%, #00ff88 100%);
+  background-size: 200% auto;
+  box-shadow: 0 4px 18px rgba(0, 199, 115, 0.35);
+  transition: background-position 0.35s, transform 0.14s, box-shadow 0.14s;
+}
+.bf-btn-primary:hover {
+  background-position: right center;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 28px rgba(0, 199, 115, 0.42);
+}
+.bf-btn-primary:active { transform: translateY(0); }
+.bf-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: skewX(-15deg);
+}
+.bf-btn-primary:hover::after { animation: bf-shine 0.5s ease; }
+
+/* Indicador de status pulsante (dashboard e telas internas) */
+@keyframes bf-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 199, 115, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(0, 199, 115, 0); }
+}
+.bf-pulse-dot { animation: bf-pulse-dot 2s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-shimmer-text,
+  .bf-slide-left,
+  .bf-slide-up,
+  .bf-grow-x,
+  .bf-fade-feat,
+  .bf-btn-primary,
+  .bf-btn-primary::after,
+  .bf-pulse-dot {
+    animation: none;
+  }
 }

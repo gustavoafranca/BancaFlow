@@ -1,0 +1,4 @@
+interface:
+  display_name: "Config New Module"
+  short_description: "Crie fronteiras modulares seguras e idempotentes"
+  default_prompt: "Use $config-new-module para pré-visualizar e criar somente a fundação estrutural do novo módulo, escolhendo o menor modo aplicável e preservando rotas e arquivos existentes."

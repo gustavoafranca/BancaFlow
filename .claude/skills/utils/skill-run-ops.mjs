@@ -2,6 +2,10 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
+function ensureTrailingLineBreak(text) {
+  return text.endsWith('\n') ? text : `${text}\n`;
+}
+
 async function pathExists(targetPath) {
   try {
     await fs.access(targetPath);
@@ -11,91 +15,166 @@ async function pathExists(targetPath) {
   }
 }
 
-/**
- * Creates a skill run operations object with logging support.
- */
-export function createSkillRunOps({ rootDir, logger, dryRun }) {
-  async function runCommand(cmd, args, cwd) {
-    const cmdStr = `${cmd} ${args.join(' ')}`;
-    await logger.log('CMD', `${cmdStr} (cwd=${cwd})`);
+function toLogPath(rootDir, targetPath) {
+  if (typeof targetPath !== 'string' || targetPath.trim() === '') return '';
+  const absolute = path.isAbsolute(targetPath) ? targetPath : path.resolve(rootDir, targetPath);
+  return path.relative(rootDir, absolute).replace(/\\/g, '/');
+}
 
-    if (dryRun) {
-      console.log(`[DRY RUN] ${cmdStr}`);
-      return;
+export function createSkillRunOps({ rootDir, logger, dryRun = false }) {
+  async function ensureDir(dirPath, options = {}) {
+    const exists = await pathExists(dirPath);
+    if (exists) return false;
+
+    logger?.file?.('mkdir', dirPath, {
+      dryRun,
+      note: options.note,
+    });
+
+    if (!dryRun) {
+      await fs.mkdir(dirPath, { recursive: true });
     }
 
+    return true;
+  }
+
+  async function writeTextFile(filePath, content, options = {}) {
+    const {
+      ensureNewline = true,
+      note = '',
+      markRiskOnOverwrite = true,
+    } = options;
+
+    const normalized = ensureNewline ? ensureTrailingLineBreak(content) : content;
+    let previous = null;
+
+    try {
+      previous = await fs.readFile(filePath, 'utf8');
+    } catch (error) {
+      if (!error || error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+
+    if (previous === normalized) {
+      logger?.file?.('skip', filePath, {
+        dryRun,
+        note: note || 'inalterado',
+      });
+      return {
+        changed: false,
+        created: false,
+        updated: false,
+      };
+    }
+
+    const created = previous === null;
+    logger?.file?.(created ? 'create' : 'update', filePath, {
+      dryRun,
+      note,
+      riskOnOverwrite: !created && markRiskOnOverwrite,
+    });
+
+    if (!dryRun) {
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, normalized, 'utf8');
+    }
+
+    return {
+      changed: true,
+      created,
+      updated: !created,
+    };
+  }
+
+  async function writeJsonFile(filePath, data, options = {}) {
+    return writeTextFile(filePath, `${JSON.stringify(data, null, 2)}\n`, {
+      ensureNewline: false,
+      ...options,
+    });
+  }
+
+  async function removePath(targetPath, options = {}) {
+    const {
+      recursive = false,
+      force = true,
+      note = '',
+      markRisk = true,
+    } = options;
+
+    if (!(await pathExists(targetPath))) {
+      return false;
+    }
+
+    logger?.file?.('delete', targetPath, {
+      dryRun,
+      note,
+      riskOnDelete: markRisk,
+    });
+
+    if (!dryRun) {
+      await fs.rm(targetPath, { recursive, force });
+    }
+
+    return true;
+  }
+
+  async function renamePath(fromPath, toPath, options = {}) {
+    const {
+      note = '',
+      markRisk = true,
+    } = options;
+
+    if (!(await pathExists(fromPath))) {
+      return false;
+    }
+
+    if (await pathExists(toPath)) {
+      logger?.risk?.(`destino existente impede rename: ${toLogPath(rootDir, toPath)}`);
+      return false;
+    }
+
+    const fromRel = toLogPath(rootDir, fromPath);
+    const toRel = toLogPath(rootDir, toPath);
+    logger?.file?.('rename', `${fromRel} -> ${toRel}`, {
+      dryRun,
+      note,
+      riskOnRename: markRisk,
+    });
+
+    if (!dryRun) {
+      await fs.mkdir(path.dirname(toPath), { recursive: true });
+      await fs.rename(fromPath, toPath);
+    }
+
+    return true;
+  }
+
+  function runCommand(cmd, args = [], cwd = rootDir) {
+    logger?.command?.(cmd, args);
+
     return new Promise((resolve, reject) => {
-      const child = spawn(cmd, args, {
-        cwd,
-        stdio: 'inherit',
-        shell: process.platform === 'win32',
-      });
-
-      child.on('error', (err) => {
-        reject(new Error(`Failed to start "${cmdStr}": ${err.message}`));
-      });
-
+      const child = spawn(cmd, args, { cwd, stdio: 'inherit' });
+      child.on('error', reject);
       child.on('exit', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Command exited with code ${code}: ${cmdStr}`));
-        } else {
+        if (code === 0) {
           resolve();
+          return;
         }
+
+        reject(new Error(`Command failed: ${cmd} ${args.join(' ')} (exit ${code})`));
       });
     });
   }
 
-  async function writeTextFile(filePath, content, { ensureNewline = false, markRiskOnOverwrite = false, note = '' } = {}) {
-    const exists = await pathExists(filePath);
-    const marker = exists ? 'FILE_UPDATE' : 'FILE_CREATE';
-
-    if (exists && markRiskOnOverwrite) {
-      await logger.log('RISK', `overwriting ${path.relative(rootDir, filePath)}${note ? ` (${note})` : ''}`);
-    }
-
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-
-    let finalContent = content;
-    if (ensureNewline && !finalContent.endsWith('\n')) {
-      finalContent += '\n';
-    }
-
-    await fs.writeFile(filePath, finalContent, 'utf8');
-    await logger.log(marker, `${path.relative(rootDir, filePath)}${note ? ` (${note})` : ''}`);
-  }
-
-  async function writeJsonFile(filePath, data, { note = '', markRiskOnOverwrite = false } = {}) {
-    const content = `${JSON.stringify(data, null, 2)}\n`;
-    await writeTextFile(filePath, content, { ensureNewline: false, markRiskOnOverwrite, note });
-  }
-
-  async function ensureDir(dirPath, { note = '' } = {}) {
-    const exists = await pathExists(dirPath);
-    if (!exists) {
-      await fs.mkdir(dirPath, { recursive: true });
-      await logger.log('DIR_CREATE', `${path.relative(rootDir, dirPath)}${note ? ` (${note})` : ''}`);
-    }
-  }
-
-  async function removePath(targetPath, { recursive = false, force = false, markRisk = false, note = '' } = {}) {
-    const exists = await pathExists(targetPath);
-    if (!exists) return;
-
-    const rel = path.relative(rootDir, targetPath);
-
-    if (markRisk) {
-      await logger.log('RISK', `removing ${rel}${note ? ` (${note})` : ''}`);
-    }
-
-    await fs.rm(targetPath, { recursive, force });
-    await logger.log('FILE_DELETE', `${rel}${note ? ` (${note})` : ''}`);
-  }
-
   return {
+    dryRun,
     runCommand,
+    ensureDir,
     writeTextFile,
     writeJsonFile,
-    ensureDir,
     removePath,
+    renamePath,
+    pathExists,
   };
 }

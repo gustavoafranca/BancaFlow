@@ -30,5 +30,11 @@
     "modules/*",
     "packages/config/*"
   ],
-  "packageManager": "npm@latest"
+  "packageManager": "npm@9.2.0",
+  "overrides": {
+    "@radix-ui/react-dismissable-layer": "1.1.16",
+    "@radix-ui/react-focus-scope": "1.1.13",
+    "@radix-ui/react-portal": "1.1.14",
+    "@radix-ui/react-presence": "1.1.8"
+  }
 }

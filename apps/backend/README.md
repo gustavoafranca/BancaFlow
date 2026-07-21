@@ -1,98 +1,145 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BancaFlow Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend NestJS da vertical Identity + Tenancy. Esta aplicação é a camada de **infraestrutura/adapters e composition root**: recebe HTTP, configura segurança, implementa ports com Prisma/crypto e compõe casos de uso. As regras de negócio vivem nos pacotes de domínio; controllers e adapters não as redefinem.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Índice da vertical
 
-## Description
+- [Identity no backend](src/modules/identity/README.md): endpoints, tokens/factories, guard, tenant resolver, credenciais, cookies, concorrência e diagramas de login/refresh/troca obrigatória;
+- [Tenancy no backend](src/modules/tenancy/README.md): `TenancyModule`, `BancaRepositoryPrisma` e `BancaContextResolver`;
+- [Platform Provisioning](src/modules/platform/README.md): composition root de `ProvisionBancaUseCase`, seed e ausência de endpoint no MVP;
+- [Identity no domínio](../../modules/identity/README.md): agregados, regras, ports e casos de uso;
+- [Tenancy no domínio](../../modules/tenancy/README.md): `Banca`, provisionamento e seu diagrama atômico.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+`AppModule` importa `IdentityModule`, `TenancyModule`, `PlatformProvisioningModule`, `DbModule` e `SharedModule`. Não há `forwardRef`: a composição cross-context vive no platform. `SharedModule` registra configuração e a pilha Passport; as rotas Identity usam o guard próprio descrito no README do módulo.
 
-## Project setup
+## Prisma: modelos, integridade e migrações
+
+Esta é a fonte canônica da persistência da vertical. O schema é modular em [`prisma/models`](prisma/models):
+
+| Modelo        | Papel                     | Integridade relevante                                                                                                                                      |
+| ------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Banca`       | tenant raiz               | `codigoBanca` único e normalizado; status limitado a `ACTIVE`/`INACTIVE`; deleção de banca é restrita enquanto houver contas                               |
+| `UserAccount` | conta dentro de uma banca | `UNIQUE(bancaId, normalizedUsername)`, `UNIQUE(id, bancaId)`, índice por `bancaId`, `version` para CAS; checks de role/status e `failedLoginAttempts >= 0` |
+| `Session`     | sessão de autenticação    | `UNIQUE(refreshTokenDigest)`, índice por `(userId, bancaId)` e FK composta `(userId, bancaId) → UserAccount(id, bancaId)` com cascade                      |
+
+A FK composta impede no próprio banco que uma sessão de uma banca aponte para conta de outra. Somente o digest HMAC do refresh token é persistido. Os campos textuais de role/status usam `CHECK` SQL porque o modelo Prisma atual os representa como `String`.
+
+Migrações existentes, em ordem:
+
+1. [`20260715042906_tenancy_banca_mvp`](prisma/migrations/20260715042906_tenancy_banca_mvp/migration.sql): bootstrap e tabela/índice de `Banca`;
+2. [`20260715044114_identity_auth_mvp`](prisma/migrations/20260715044114_identity_auth_mvp/migration.sql): contas, sessões, índices e FKs iniciais;
+3. [`20260716012553_harden_identity_mvp`](prisma/migrations/20260716012553_harden_identity_mvp/migration.sql): `version`, digest único, FK composta e checks de enums;
+4. [`20260716155208_add_failed_login_attempts_check`](prisma/migrations/20260716155208_add_failed_login_attempts_check/migration.sql): check de contador não negativo.
+
+`PrismaBootstrap` ainda aparece no schema/migração inicial como artefato técnico do bootstrap; não participa da vertical.
+
+O seed [`provision-farizeu.seed.ts`](prisma/seed/tasks/provision-farizeu.seed.ts) usa o `ProvisionBancaUseCase` real para criar uma banca de desenvolvimento e seu OWNER na mesma transação. É idempotente e seu valor de password não deve ser reutilizado nem copiado para logs/documentação/produção.
+
+## Prisma, transações e mapeamento
+
+`PrismaService` implementa `TransactionManager<PrismaTransactionContext>` e mantém o cliente transacional em `AsyncLocalStorage`:
+
+- `runInTransaction(operation)` abre uma transação Prisma e propaga o `tx` pelo contexto ambiente;
+- `runInTransactionResult(operation)` converte `Result.fail` em uma exceção sentinela interna para obrigar rollback, depois devolve o mesmo `Result.fail`; exceções reais continuam propagando;
+- `activeClient()` retorna o `tx` ambiente ou o client padrão;
+- `isInTransaction()` permite ao adapter evitar subtransação quando já está dentro de uma fronteira maior.
+
+Os adapters chamam `activeClient()` e fazem mapeamento explícito `toDomain`/`fromDomain`. Rows e tipos Prisma nunca cruzam as ports. `toDomain` chama factories do domínio (`tryCreate`), enquanto `fromDomain` extrai valores normalizados e campos persistíveis. Erros Prisma conhecidos são traduzidos para códigos estáveis, sem devolver mensagens cruas do banco.
+
+Os tokens `TRANSACTION_MANAGER` (Identity) e `TENANCY_TRANSACTION_MANAGER` (Tenancy) usam `useExisting: PrismaService`; portanto resolvem para a mesma instância. Isso permite que o provisionamento e os casos de uso compostos compartilhem o mesmo `tx` ambiente.
+
+## Configuração e segurança
+
+Use [`.env.example`](.env.example) como lista de nomes, nunca como fonte de secrets reais:
+
+| Variável                   | Finalidade                                                               |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`             | conexão PostgreSQL                                                       |
+| `PORT`                     | porta HTTP, default 4000                                                 |
+| `NODE_ENV`                 | ativa cookies `Secure` em produção                                       |
+| `JWT_SECRET`               | assinatura/verificação do access token                                   |
+| `REFRESH_TOKEN_SECRET`     | chave distinta do HMAC do refresh token                                  |
+| `ACCESS_TOKEN_TTL_MINUTES` | TTL do access token                                                      |
+| `REFRESH_TOKEN_TTL_DAYS`   | nome reservado no template; o domínio atual usa TTL de refresh de 7 dias |
+| `BCRYPT_ROUNDS`            | custo bcrypt                                                             |
+| `BANCA_HOST_SUFFIX`        | sufixo aceito para extrair `codigoBanca`                                 |
+| `TRUST_PROXY_HOST`         | habilita consideração de `X-Forwarded-Host` junto com peer confiável     |
+| `TRUSTED_PROXY_IPS`        | allowlist de IPs/CIDRs dos proxies                                       |
+| `CORS_ORIGINS`             | allowlist de origens, separada por vírgula                               |
+
+`validateSecuritySecrets` roda antes do bootstrap: os dois secrets são obrigatórios, devem ter no mínimo 32 caracteres e ser diferentes. Gere valores aleatórios localmente; não use placeholders em runtime. CORS permite credenciais, mas só reflete origens da allowlist; origem desconhecida recebe resposta sem headers CORS, não erro 500. Sem allowlist de proxy, a confiança falha fechada.
+
+Perfil local seguro: banco local, origens explícitas, host de desenvolvimento mapeado para loopback e confiança somente em loopback quando o Next encaminha o host. Perfil de produção: HTTPS, secrets gerenciados externamente, `CORS_ORIGINS` exata e apenas IPs/CIDRs reais do proxy de borda; nunca confie globalmente em qualquer proxy.
+
+## Instalação, banco e execução
+
+Na raiz do repositório:
 
 ```bash
-$ npm install
+npm install
+npm --workspace @bancaflow/backend run db:start
+npm --workspace @bancaflow/backend run prisma:generate
+npm --workspace @bancaflow/backend run prisma:migrate:dev
+npm --workspace @bancaflow/backend run prisma:seed
+npm --workspace @bancaflow/backend run start:dev
 ```
 
-## Compile and run the project
+Para produção, use `prisma:migrate:deploy` em vez de `prisma:migrate:dev`. O seed inicializa um `ApplicationContext` NestJS real; por isso sua configuração usa `ts-node` e as mesmas factories/adapters da aplicação.
+
+## Testes
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm --workspace @bancaflow/backend run test
+npm --workspace @bancaflow/backend run test:e2e
+npm --workspace @bancaflow/backend run test:cov
 ```
 
-## Run tests
+Specs unitários:
 
-```bash
-# unit tests
-$ npm run test
+- [`app.controller.spec.ts`](src/app.controller.spec.ts): endpoint básico;
+- [`security.config.spec.ts`](src/config/security.config.spec.ts): secrets, CORS, allowlist, CIDR e IPv4 mapeado;
+- [`prisma.service.spec.ts`](src/db/prisma.service.spec.ts): commit/rollback de `Result`, propagação e cliente ambiente;
+- [`dto.spec.ts`](src/modules/identity/dto/dto.spec.ts): contrato de DTOs;
+- [`jwt-cookie-auth.guard.spec.ts`](src/modules/identity/guards/jwt-cookie-auth.guard.spec.ts): sessão, conta, banca e troca obrigatória;
+- [`tenant-resolver.middleware.spec.ts`](src/modules/identity/middleware/tenant-resolver.middleware.spec.ts): host direto, proxy confiável e fail-closed.
 
-# e2e tests
-$ npm run test:e2e
+Specs e2e/integração:
 
-# test coverage
-$ npm run test:cov
-```
+- [`app.e2e-spec.ts`](test/app.e2e-spec.ts) e [`cors.e2e-spec.ts`](test/cors.e2e-spec.ts): bootstrap HTTP e CORS;
+- [`identity.e2e-spec.ts`](test/identity/identity.e2e-spec.ts): login, refresh, logout, sessões, reset e trocas de senha;
+- [`concurrency.e2e-spec.ts`](test/identity/concurrency.e2e-spec.ts): cinco falhas simultâneas e dois refreshes concorrentes;
+- [`session-rotation.e2e-spec.ts`](test/identity/session-rotation.e2e-spec.ts): CAS contra revogação/expiração;
+- [`tenant-isolation.e2e-spec.ts`](test/identity/tenant-isolation.e2e-spec.ts): unicidade por banca e FK composta;
+- [`toggle-status.e2e-spec.ts`](test/identity/toggle-status.e2e-spec.ts): revogação pelo caso de uso;
+- [`transaction.e2e-spec.ts`](test/identity/transaction.e2e-spec.ts): rollback de login e troca de senha;
+- [`proxy-trust.e2e-spec.ts`](test/identity/proxy-trust.e2e-spec.ts): rejeição de host encaminhado por peer não confiável;
+- [`provision-banca.e2e-spec.ts`](test/tenancy/provision-banca.e2e-spec.ts): commit e rollback de banca + OWNER.
 
-## Deployment
+Os testes e2e com banco real exigem PostgreSQL e `DATABASE_URL` de teste apropriada.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Decisões do MVP e fora de escopo
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+`ProvisionBanca` não tem endpoint HTTP; a pilha Passport existe, mas não protege as rotas Identity; MFA, recuperação por e-mail, permissões granulares e gestão HTTP de bancas não existem. Esta documentação descreve o código atual, não antecipa essas funcionalidades.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+## Erros comuns ao evoluir este módulo
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Implementar regra de negócio em controller, guard, módulo NestJS ou adapter Prisma.
+- Alterar schema sem migration/client gerado/mapeamentos/testes correspondentes.
+- Usar `PrismaClient` diretamente em adapters e ignorar `activeClient()`, quebrando atomicidade.
+- Devolver tipos ou mensagens Prisma além da fronteira.
+- Tratar `Result.fail` como retorno normal dentro de `$transaction` e cometer efeitos parciais.
+- Usar secrets curtos/iguais, logar credenciais ou copiar a password do seed.
+- Liberar CORS genérico ou confiar em qualquer proxy.
+- Aplicar `prisma:migrate:dev` em produção.
+- Duplicar aqui regras já canônicas nos READMEs de domínio.
 
-## Resources
+## Checklist para adicionar um novo módulo ou adapter
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- [ ] Definir a regra e a port no domínio proprietário.
+- [ ] Implementar adapter com `toDomain`/`fromDomain` e erros estáveis.
+- [ ] Usar `PrismaService.activeClient()` e definir a fronteira transacional no caso de uso.
+- [ ] Registrar tokens/factories/exports mínimos, sem `forwardRef`.
+- [ ] Criar migration para constraints e índices; regenerar o client.
+- [ ] Atualizar `.env.example` apenas com nomes/placeholders seguros, se necessário.
+- [ ] Cobrir unitário e e2e, incluindo rollback, concorrência e isolamento.
+- [ ] Atualizar o README do módulo e este índice sem duplicar regras de domínio.

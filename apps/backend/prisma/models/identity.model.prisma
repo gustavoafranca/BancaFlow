@@ -1,0 +1,57 @@
+// Prisma models for module: identity
+
+/// Conta de usuário isolada por banca (tenant). O `id` (UUID) é gerado pelo
+/// domínio (`UserAccountRepository.nextId`). O par (bancaId, normalizedUsername)
+/// é único: o mesmo username pode coexistir em bancas diferentes.
+model UserAccount {
+  id                          String    @id
+  bancaId                     String
+  username                    String
+  normalizedUsername          String
+  name                        String
+  email                       String?
+  role                        String
+  status                      String
+  passwordHash                String
+  passwordChangedAt           DateTime
+  mustChangePassword          Boolean   @default(false)
+  failedLoginAttempts         Int       @default(0)
+  failedLoginWindowStartedAt  DateTime?
+  lockedUntil                 DateTime?
+  /// Versionamento otimista (ETag). Compare-and-swap no adapter Prisma:
+  /// `UPDATE ... WHERE id = ? AND version = ? SET ..., version = version + 1`.
+  version                     Int       @default(1)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  banca    Banca     @relation(fields: [bancaId], references: [id], onDelete: Restrict)
+  sessions Session[]
+
+  @@unique([bancaId, normalizedUsername])
+  /// Suporta a FK composta de Session(userId, bancaId), impedindo no banco que
+  /// uma sessão referencie um usuário de outra banca.
+  @@unique([id, bancaId])
+  @@index([bancaId])
+  @@map("user_accounts")
+}
+
+/// Sessão de autenticação. Guarda apenas o digest HMAC-SHA-256 do refresh token,
+/// nunca o token bruto. Rotação substitui o digest; revogação marca `revokedAt`.
+model Session {
+  id                 String    @id
+  userId             String
+  bancaId            String
+  refreshTokenDigest String    @unique
+  expiresAt          DateTime
+  revokedAt          DateTime?
+  deviceInfo         String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  /// FK composta (userId, bancaId) -> UserAccount(id, bancaId): impede no
+  /// banco que uma sessão referencie um usuário de outra banca (D5/D-isolamento).
+  userAccount UserAccount @relation(fields: [userId, bancaId], references: [id, bancaId], onDelete: Cascade)
+
+  @@index([userId, bancaId])
+  @@map("sessions")
+}

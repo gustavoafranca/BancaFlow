@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Spec Roadmap"
+  short_description: "Organize trilhas, capacidades e prompts menores"
+  default_prompt: "Use $plan-spec-roadmap para organizar artefatos por áreas estáveis, decompor capacidades em increments verticais e preparar um prompt de spec por change."

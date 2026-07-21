@@ -1,0 +1,353 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "id": "title", "type": "text", "x": 40, "y": 24, "width": 1580, "height": 44, "angle": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a0",
+      "roundness": null, "seed": 101, "version": 1, "versionNonce": 1101, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "BancaFlow — Guia visual de arquitetura: Tenancy + Identity",
+      "fontSize": 32, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "BancaFlow — Guia visual de arquitetura: Tenancy + Identity", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "subtitle", "type": "text", "x": 42, "y": 75, "width": 1650, "height": 50, "angle": 0,
+      "strokeColor": "#495057", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a1",
+      "roundness": null, "seed": 102, "version": 1, "versionNonce": 1102, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "Leia de cima para baixo: camadas → bounded contexts → catálogo de objetos → fluxo de login → pontos de atenção.",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "Leia de cima para baixo: camadas → bounded contexts → catálogo de objetos → fluxo de login → pontos de atenção.", "autoResize": true, "lineHeight": 1.25
+    },
+
+    {
+      "id": "layers-panel", "type": "rectangle", "x": 40, "y": 140, "width": 1700, "height": 410, "angle": 0,
+      "strokeColor": "#1971c2", "backgroundColor": "#e7f5ff", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 35, "groupIds": [], "frameId": null, "index": "a2",
+      "roundness": {"type": 3}, "seed": 103, "version": 1, "versionNonce": 1103, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layers-title", "type": "text", "x": 65, "y": 158, "width": 850, "height": 30, "angle": 0,
+      "strokeColor": "#1864ab", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a3",
+      "roundness": null, "seed": 104, "version": 1, "versionNonce": 1104, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "1. Arquitetura Limpa — dependências apontam para dentro",
+      "fontSize": 22, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "1. Arquitetura Limpa — dependências apontam para dentro", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-web", "type": "rectangle", "x": 80, "y": 230, "width": 220, "height": 180, "angle": 0,
+      "strokeColor": "#6741d9", "backgroundColor": "#e5dbff", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a4",
+      "roundness": {"type": 3}, "seed": 105, "version": 1, "versionNonce": 1105, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-web-text", "type": "text", "x": 100, "y": 250, "width": 185, "height": 135, "angle": 0,
+      "strokeColor": "#3b2f73", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a5",
+      "roundness": null, "seed": 106, "version": 1, "versionNonce": 1106, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "WEB / USUÁRIO\n\nFormulários\nproxy.ts\nlayout privado\ncliente HTTP",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "WEB / USUÁRIO\n\nFormulários\nproxy.ts\nlayout privado\ncliente HTTP", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-http", "type": "rectangle", "x": 350, "y": 230, "width": 220, "height": 180, "angle": 0,
+      "strokeColor": "#e8590c", "backgroundColor": "#fff4e6", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a6",
+      "roundness": {"type": 3}, "seed": 107, "version": 1, "versionNonce": 1107, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-http-text", "type": "text", "x": 370, "y": 250, "width": 185, "height": 135, "angle": 0,
+      "strokeColor": "#9c4300", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a7",
+      "roundness": null, "seed": 108, "version": 1, "versionNonce": 1108, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "ADAPTER DE ENTRADA\n\nController\nMiddleware de host\nGuard JWT\nCookies / HTTP",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "ADAPTER DE ENTRADA\n\nController\nMiddleware de host\nGuard JWT\nCookies / HTTP", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-usecase", "type": "rectangle", "x": 620, "y": 215, "width": 250, "height": 210, "angle": 0,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "strokeWidth": 3,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a8",
+      "roundness": {"type": 3}, "seed": 109, "version": 1, "versionNonce": 1109, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-usecase-text", "type": "text", "x": 642, "y": 240, "width": 205, "height": 150, "angle": 0,
+      "strokeColor": "#1b6b2a", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "a9",
+      "roundness": null, "seed": 110, "version": 1, "versionNonce": 1110, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "CASOS DE USO\n\nOrquestram o fluxo\nUsam ports\nChamam entidades\nRetornam Result",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "CASOS DE USO\n\nOrquestram o fluxo\nUsam ports\nChamam entidades\nRetornam Result", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-domain", "type": "rectangle", "x": 920, "y": 200, "width": 265, "height": 240, "angle": 0,
+      "strokeColor": "#2b8a3e", "backgroundColor": "#b2f2bb", "fillStyle": "solid", "strokeWidth": 4,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aA",
+      "roundness": {"type": 3}, "seed": 111, "version": 1, "versionNonce": 1111, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-domain-text", "type": "text", "x": 940, "y": 225, "width": 225, "height": 185, "angle": 0,
+      "strokeColor": "#145523", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aB",
+      "roundness": null, "seed": 112, "version": 1, "versionNonce": 1112, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "DOMÍNIO (centro)\n\nAgregados / Entidades\nValue Objects\nInvariantes\nMétodos de negócio\nErros estáveis",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "DOMÍNIO (centro)\n\nAgregados / Entidades\nValue Objects\nInvariantes\nMétodos de negócio\nErros estáveis", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-ports", "type": "rectangle", "x": 1235, "y": 230, "width": 205, "height": 180, "angle": 0,
+      "strokeColor": "#0b7285", "backgroundColor": "#c5f6fa", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "dashed", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aC",
+      "roundness": {"type": 3}, "seed": 113, "version": 1, "versionNonce": 1113, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-ports-text", "type": "text", "x": 1252, "y": 250, "width": 170, "height": 135, "angle": 0,
+      "strokeColor": "#075666", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aD",
+      "roundness": null, "seed": 114, "version": 1, "versionNonce": 1114, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "PORTS\n\nInterfaces pedidas\npelo núcleo:\nRepository, Clock,\nCrypto, Token...",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "PORTS\n\nInterfaces pedidas\npelo núcleo:\nRepository, Clock,\nCrypto, Token...", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "layer-adapters", "type": "rectangle", "x": 1490, "y": 230, "width": 205, "height": 180, "angle": 0,
+      "strokeColor": "#d9480f", "backgroundColor": "#ffe8cc", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aE",
+      "roundness": {"type": 3}, "seed": 115, "version": 1, "versionNonce": 1115, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "layer-adapters-text", "type": "text", "x": 1506, "y": 250, "width": 175, "height": 135, "angle": 0,
+      "strokeColor": "#963300", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "aF",
+      "roundness": null, "seed": 116, "version": 1, "versionNonce": 1116, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "ADAPTERS DE SAÍDA\n\nPrisma / PostgreSQL\nbcrypt / JWT / HMAC\nRelógio do sistema",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "ADAPTERS DE SAÍDA\n\nPrisma / PostgreSQL\nbcrypt / JWT / HMAC\nRelógio do sistema", "autoResize": true, "lineHeight": 1.25
+    },
+
+    {
+      "id": "contexts-panel", "type": "rectangle", "x": 40, "y": 585, "width": 1700, "height": 455, "angle": 0,
+      "strokeColor": "#5f3dc4", "backgroundColor": "#f3f0ff", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 35, "groupIds": [], "frameId": null, "index": "b0",
+      "roundness": {"type": 3}, "seed": 201, "version": 1, "versionNonce": 1201, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "contexts-title", "type": "text", "x": 65, "y": 605, "width": 900, "height": 30, "angle": 0,
+      "strokeColor": "#5f3dc4", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b1",
+      "roundness": null, "seed": 202, "version": 1, "versionNonce": 1202, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "2. DDD — dois bounded contexts com responsabilidades diferentes",
+      "fontSize": 22, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "2. DDD — dois bounded contexts com responsabilidades diferentes", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "tenancy-box", "type": "rectangle", "x": 80, "y": 675, "width": 700, "height": 315, "angle": 0,
+      "strokeColor": "#5f3dc4", "backgroundColor": "#e5dbff", "fillStyle": "solid", "strokeWidth": 3,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b2",
+      "roundness": {"type": 3}, "seed": 203, "version": 1, "versionNonce": 1203, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "tenancy-text", "type": "text", "x": 105, "y": 700, "width": 645, "height": 260, "angle": 0,
+      "strokeColor": "#3b2f73", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b3",
+      "roundness": null, "seed": 204, "version": 1, "versionNonce": 1204, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "TENANCY — quem é a banca?\n\nAgregado Banca\n• id, codigoBanca, nome, status\n• activate() / deactivate()\n\nValue Objects\n• CodigoBanca: normaliza e reserva subdomínios\n• BancaStatus: ACTIVE / INACTIVE\n\nUse cases\n• GetBancaContext: código → bancaId + ativo\n• ProvisionBanca: Banca + primeiro OWNER (transação)",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "TENANCY — quem é a banca?\n\nAgregado Banca\n• id, codigoBanca, nome, status\n• activate() / deactivate()\n\nValue Objects\n• CodigoBanca: normaliza e reserva subdomínios\n• BancaStatus: ACTIVE / INACTIVE\n\nUse cases\n• GetBancaContext: código → bancaId + ativo\n• ProvisionBanca: Banca + primeiro OWNER (transação)", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "identity-box", "type": "rectangle", "x": 950, "y": 675, "width": 745, "height": 315, "angle": 0,
+      "strokeColor": "#1971c2", "backgroundColor": "#d0ebff", "fillStyle": "solid", "strokeWidth": 3,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b4",
+      "roundness": {"type": 3}, "seed": 205, "version": 1, "versionNonce": 1205, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "identity-text", "type": "text", "x": 975, "y": 700, "width": 695, "height": 260, "angle": 0,
+      "strokeColor": "#124b7a", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b5",
+      "roundness": null, "seed": 206, "version": 1, "versionNonce": 1206, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "IDENTITY — quem pode entrar?\n\nAgregado UserAccount\n• credencial, papel, status, bloqueio\n• falha/sucesso, senha, ativar/bloquear\n\nAgregado Session\n• digest do refresh, expiração, revogação\n• rotate() / revoke() / isActive()\n\nUse cases\n• login, refresh, logout, sessões, senhas, status",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "IDENTITY — quem pode entrar?\n\nAgregado UserAccount\n• credencial, papel, status, bloqueio\n• falha/sucesso, senha, ativar/bloquear\n\nAgregado Session\n• digest do refresh, expiração, revogação\n• rotate() / revoke() / isActive()\n\nUse cases\n• login, refresh, logout, sessões, senhas, status", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "context-arrow", "type": "arrow", "x": 785, "y": 810, "width": 155, "height": 0, "angle": 0,
+      "strokeColor": "#495057", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 3,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b6",
+      "roundness": {"type": 2}, "seed": 207, "version": 1, "versionNonce": 1207, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "points": [[0,0],[155,0]], "lastCommittedPoint": null, "startBinding": null, "endBinding": null,
+      "startArrowhead": null, "endArrowhead": "arrow", "elbowed": false
+    },
+    {
+      "id": "context-arrow-label", "type": "text", "x": 792, "y": 750, "width": 145, "height": 50, "angle": 0,
+      "strokeColor": "#343a40", "backgroundColor": "#f8f9fa", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "b7",
+      "roundness": null, "seed": 208, "version": 1, "versionNonce": 1208, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "CreateUserAccountPort\n(port de entrada)",
+      "fontSize": 15, "fontFamily": 1, "textAlign": "center", "verticalAlign": "top", "containerId": null,
+      "originalText": "CreateUserAccountPort\n(port de entrada)", "autoResize": true, "lineHeight": 1.25
+    },
+
+    {
+      "id": "catalog-panel", "type": "rectangle", "x": 40, "y": 1080, "width": 1700, "height": 760, "angle": 0,
+      "strokeColor": "#2f9e44", "backgroundColor": "#ebfbee", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 35, "groupIds": [], "frameId": null, "index": "c0",
+      "roundness": {"type": 3}, "seed": 301, "version": 1, "versionNonce": 1301, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "catalog-title", "type": "text", "x": 65, "y": 1100, "width": 1200, "height": 30, "angle": 0,
+      "strokeColor": "#237a34", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "c1",
+      "roundness": null, "seed": 302, "version": 1, "versionNonce": 1302, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "3. Catálogo — o papel de cada peça (sem decorar tecnologia)",
+      "fontSize": 22, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "3. Catálogo — o papel de cada peça (sem decorar tecnologia)", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "catalog-a", "type": "text", "x": 85, "y": 1160, "width": 500, "height": 620, "angle": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "c2",
+      "roundness": null, "seed": 303, "version": 1, "versionNonce": 1303, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "ENTIDADES RICAS (não anêmicas)\n\nUserAccount\n• isLocked / isActive: consulta estado\n• recordLoginFailure: janela + bloqueio\n• resetLoginFailures: limpa segurança\n• activate/deactivate/block/unblock: transições\n• changePassword: nova Credential\n\nSession\n• isExpired/isRevoked/isActive\n• revoke: encerra uma sessão\n• rotate: troca digest + validade\n\nBanca\n• isActive\n• activate/deactivate\n\nPor que não são anêmicas?\nOs dados e as regras que protegem esses dados moram juntos. Não existem setters públicos espalhando regras.",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "ENTIDADES RICAS (não anêmicas)\n\nUserAccount\n• isLocked / isActive: consulta estado\n• recordLoginFailure: janela + bloqueio\n• resetLoginFailures: limpa segurança\n• activate/deactivate/block/unblock: transições\n• changePassword: nova Credential\n\nSession\n• isExpired/isRevoked/isActive\n• revoke: encerra uma sessão\n• rotate: troca digest + validade\n\nBanca\n• isActive\n• activate/deactivate\n\nPor que não são anêmicas?\nOs dados e as regras que protegem esses dados moram juntos. Não existem setters públicos espalhando regras.", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "catalog-b", "type": "text", "x": 620, "y": 1160, "width": 520, "height": 630, "angle": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "c3",
+      "roundness": null, "seed": 304, "version": 1, "versionNonce": 1304, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "VALUE OBJECTS (valor, não identidade)\n\nUsername: raw + normalized, formato\nCredential: hash + data + troca obrigatória\nAccountRole: OWNER / ADMIN / USER\nAccountStatus: ACTIVE / INACTIVE / BLOCKED\nCodigoBanca: subdomínio normalizado/reservado\nBancaStatus: ACTIVE / INACTIVE\n\nPORTS (tomadas)\n\nRepositories: guardar/carregar agregados\nBancaContextResolver: código → contexto mínimo\nPasswordCrypto: hash/compare sem conhecer bcrypt\nAccessTokenIssuer: emitir sem conhecer JWT\nRefreshGenerator/Digester: token opaco + HMAC\nClock: tempo testável\nTemporaryPasswordGenerator: senha forte\nTransactionManager: atomicidade\n\nADAPTER = plugue concreto: Prisma, bcrypt, JWT, HMAC, relógio.",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "VALUE OBJECTS (valor, não identidade)\n\nUsername: raw + normalized, formato\nCredential: hash + data + troca obrigatória\nAccountRole: OWNER / ADMIN / USER\nAccountStatus: ACTIVE / INACTIVE / BLOCKED\nCodigoBanca: subdomínio normalizado/reservado\nBancaStatus: ACTIVE / INACTIVE\n\nPORTS (tomadas)\n\nRepositories: guardar/carregar agregados\nBancaContextResolver: código → contexto mínimo\nPasswordCrypto: hash/compare sem conhecer bcrypt\nAccessTokenIssuer: emitir sem conhecer JWT\nRefreshGenerator/Digester: token opaco + HMAC\nClock: tempo testável\nTemporaryPasswordGenerator: senha forte\nTransactionManager: atomicidade\n\nADAPTER = plugue concreto: Prisma, bcrypt, JWT, HMAC, relógio.", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "catalog-c", "type": "text", "x": 1170, "y": 1160, "width": 520, "height": 630, "angle": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "c4",
+      "roundness": null, "seed": 305, "version": 1, "versionNonce": 1305, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "CASOS DE USO (verbos do sistema)\n\nIdentity\n• CreateUserAccount: cria conta isolada\n• Login: banca + conta + senha + sessão\n• RefreshSession: rotaciona tokens\n• Logout / LogoutAll: revoga sessão(ões)\n• ListSessions / RevokeSession: dispositivos\n• ChangePassword: troca voluntária\n• AdminResetPassword: senha temporária\n• ToggleAccountStatus: ativa/bloqueia conta\n\nTenancy\n• GetBancaContext: consulta pública mínima\n• ProvisionBanca: cria Banca + OWNER\n\nSERVIÇO DE DOMÍNIO?\nNão foi necessário. Uma regra pura que não coubesse em entidade/VO justificaria Policy/Calculator. Criar service sem necessidade só espalharia a regra.",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "CASOS DE USO (verbos do sistema)\n\nIdentity\n• CreateUserAccount: cria conta isolada\n• Login: banca + conta + senha + sessão\n• RefreshSession: rotaciona tokens\n• Logout / LogoutAll: revoga sessão(ões)\n• ListSessions / RevokeSession: dispositivos\n• ChangePassword: troca voluntária\n• AdminResetPassword: senha temporária\n• ToggleAccountStatus: ativa/bloqueia conta\n\nTenancy\n• GetBancaContext: consulta pública mínima\n• ProvisionBanca: cria Banca + OWNER\n\nSERVIÇO DE DOMÍNIO?\nNão foi necessário. Uma regra pura que não coubesse em entidade/VO justificaria Policy/Calculator. Criar service sem necessidade só espalharia a regra.", "autoResize": true, "lineHeight": 1.25
+    },
+
+    {
+      "id": "login-panel", "type": "rectangle", "x": 40, "y": 1880, "width": 1700, "height": 540, "angle": 0,
+      "strokeColor": "#0b7285", "backgroundColor": "#e3fafc", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 35, "groupIds": [], "frameId": null, "index": "d0",
+      "roundness": {"type": 3}, "seed": 401, "version": 1, "versionNonce": 1401, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "login-title", "type": "text", "x": 65, "y": 1900, "width": 1250, "height": 30, "angle": 0,
+      "strokeColor": "#087181", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "d1",
+      "roundness": null, "seed": 402, "version": 1, "versionNonce": 1402, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "4. Fluxo principal — login multi-tenant em linguagem de história",
+      "fontSize": 22, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "4. Fluxo principal — login multi-tenant em linguagem de história", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "login-steps", "type": "text", "x": 90, "y": 1960, "width": 1560, "height": 390, "angle": 0,
+      "strokeColor": "#1e1e1e", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "d2",
+      "roundness": null, "seed": 403, "version": 1, "versionNonce": 1403, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "1  Usuário abre farizeu.bancaflow.com.br e envia username + password.\n\n2  TenantResolverMiddleware lê o host e extrai codigoBanca = farizeu. Nunca aceita bancaId do body.\n\n3  LoginUseCase pede à port BancaContextResolver; Tenancy responde apenas bancaId + isActive.\n\n4  UserAccountRepository procura (bancaId, normalizedUsername). A entidade decide se está ativa/bloqueada.\n\n5A SENHA ERRADA → recordLoginFailure(now) → salva contador/janela → mesma resposta genérica 401.\n5B SENHA CERTA → resetLoginFailures → cria Session → gera refresh opaco → persiste somente HMAC.\n\n6  AccessTokenIssuer cria JWT com userId, bancaId, sessionId, role e mustChangePassword.\n\n7  Controller coloca access_token e refresh_token em cookies HttpOnly. Guard verifica JWT + sessão em cada chamada.\n\n8  RefreshSession troca o digest; Logout revoga uma; LogoutAll revoga todas. O token anterior não volta a funcionar.",
+      "fontSize": 18, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "1  Usuário abre farizeu.bancaflow.com.br e envia username + password.\n\n2  TenantResolverMiddleware lê o host e extrai codigoBanca = farizeu. Nunca aceita bancaId do body.\n\n3  LoginUseCase pede à port BancaContextResolver; Tenancy responde apenas bancaId + isActive.\n\n4  UserAccountRepository procura (bancaId, normalizedUsername). A entidade decide se está ativa/bloqueada.\n\n5A SENHA ERRADA → recordLoginFailure(now) → salva contador/janela → mesma resposta genérica 401.\n5B SENHA CERTA → resetLoginFailures → cria Session → gera refresh opaco → persiste somente HMAC.\n\n6  AccessTokenIssuer cria JWT com userId, bancaId, sessionId, role e mustChangePassword.\n\n7  Controller coloca access_token e refresh_token em cookies HttpOnly. Guard verifica JWT + sessão em cada chamada.\n\n8  RefreshSession troca o digest; Logout revoga uma; LogoutAll revoga todas. O token anterior não volta a funcionar.", "autoResize": true, "lineHeight": 1.25
+    },
+
+    {
+      "id": "review-panel", "type": "rectangle", "x": 40, "y": 2460, "width": 1700, "height": 780, "angle": 0,
+      "strokeColor": "#f08c00", "backgroundColor": "#fff9db", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 45, "groupIds": [], "frameId": null, "index": "e0",
+      "roundness": {"type": 3}, "seed": 501, "version": 1, "versionNonce": 1501, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "review-title", "type": "text", "x": 65, "y": 2480, "width": 1300, "height": 30, "angle": 0,
+      "strokeColor": "#b06500", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "e1",
+      "roundness": null, "seed": 502, "version": 1, "versionNonce": 1502, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "5. Parecer arquitetural — fundação boa, correções antes de considerar encerrado",
+      "fontSize": 22, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "5. Parecer arquitetural — fundação boa, correções antes de considerar encerrado", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "strengths", "type": "rectangle", "x": 85, "y": 2545, "width": 735, "height": 620, "angle": 0,
+      "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid", "strokeWidth": 2,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "e2",
+      "roundness": {"type": 3}, "seed": 503, "version": 1, "versionNonce": 1503, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "strengths-text", "type": "text", "x": 110, "y": 2570, "width": 680, "height": 560, "angle": 0,
+      "strokeColor": "#1b6b2a", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "e3",
+      "roundness": null, "seed": 504, "version": 1, "versionNonce": 1504, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "ACERTOS IMPORTANTES\n\n✓ Bounded contexts separados: Tenancy ≠ Identity\n✓ Entidades têm comportamento e invariantes\n✓ VOs normalizam e evitam estados inválidos\n✓ Use cases não importam Nest/Prisma/bcrypt\n✓ Ports permitem trocar infraestrutura e testar\n✓ Repositórios Prisma mapeiam domínio explicitamente\n✓ Isolamento por banca está em queries e unique composta\n✓ Refresh bruto nunca é persistido\n✓ ProvisionBanca possui rollback real testado\n✓ Cookies HttpOnly e sessão revogável\n✓ 129 testes de domínio + 16 E2E passaram\n✓ OpenSpec strict passou nas duas changes\n\nVEREDITO\nA direção arquitetural é boa e ensinável. Não é CRUD disfarçado: existe domínio de verdade. O próximo ganho vem de fechar garantias de segurança/consistência, não de criar mais camadas.",
+      "fontSize": 17, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "ACERTOS IMPORTANTES\n\n✓ Bounded contexts separados: Tenancy ≠ Identity\n✓ Entidades têm comportamento e invariantes\n✓ VOs normalizam e evitam estados inválidos\n✓ Use cases não importam Nest/Prisma/bcrypt\n✓ Ports permitem trocar infraestrutura e testar\n✓ Repositórios Prisma mapeiam domínio explicitamente\n✓ Isolamento por banca está em queries e unique composta\n✓ Refresh bruto nunca é persistido\n✓ ProvisionBanca possui rollback real testado\n✓ Cookies HttpOnly e sessão revogável\n✓ 129 testes de domínio + 16 E2E passaram\n✓ OpenSpec strict passou nas duas changes\n\nVEREDITO\nA direção arquitetural é boa e ensinável. Não é CRUD disfarçado: existe domínio de verdade. O próximo ganho vem de fechar garantias de segurança/consistência, não de criar mais camadas.", "autoResize": true, "lineHeight": 1.25
+    },
+    {
+      "id": "risks", "type": "rectangle", "x": 865, "y": 2545, "width": 830, "height": 620, "angle": 0,
+      "strokeColor": "#c92a2a", "backgroundColor": "#ffe3e3", "fillStyle": "solid", "strokeWidth": 3,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "e4",
+      "roundness": {"type": 3}, "seed": 505, "version": 1, "versionNonce": 1505, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false
+    },
+    {
+      "id": "risks-text", "type": "text", "x": 890, "y": 2570, "width": 780, "height": 565, "angle": 0,
+      "strokeColor": "#9b1c1c", "backgroundColor": "transparent", "fillStyle": "solid", "strokeWidth": 1,
+      "strokeStyle": "solid", "roughness": 1, "opacity": 100, "groupIds": [], "frameId": null, "index": "e5",
+      "roundness": null, "seed": 506, "version": 1, "versionNonce": 1506, "isDeleted": false,
+      "boundElements": [], "updated": 1, "link": null, "locked": false,
+      "text": "CORRIGIR / DECIDIR ANTES DE ENCERRAR\n\nP0  Troca obrigatória: Web não envia senha atual e Backend não renova JWT; usuário pode ficar preso em mustChangePassword.\n\nP0  StrongPassword só existe no Web; domínio aceita senha fraca. Regra de negócio deve ser autoritativa no Identity.\n\nP1  Login/refresh usam transação, mas Result.fail não provoca rollback. Falha após uma escrita pode deixar sessão/rotação parcial.\n\nP1  ChangePassword e AdminReset alteram conta + sessões sem transação.\n\nP1  Bloqueio concorrente não usa versão/lock; cinco requisições simultâneas podem perder incrementos.\n\nP1  Banco não garante que Session.bancaId = UserAccount.bancaId; adicionar FK composta. Digest deveria ser UNIQUE.\n\nP1  Proxy/layout apenas decodificam JWT sem validar assinatura/expiração; podem renderizar a casca privada antes do 401.\n\nP1  Web chama /api relativo, mas não há rewrite de desenvolvimento para o Nest.\n\nP2  Circularidade Nest Identity ↔ Tenancy: mover ProvisionBanca para módulo de composição elimina forwardRef.\n\nP2  Segredos têm defaults inseguros; produção deve falhar no startup. Erros Prisma não devem vazar error.message.\n\nP2  Invariantes de Date/contador e erro de nome da Banca precisam endurecimento.",
+      "fontSize": 16, "fontFamily": 1, "textAlign": "left", "verticalAlign": "top", "containerId": null,
+      "originalText": "CORRIGIR / DECIDIR ANTES DE ENCERRAR\n\nP0  Troca obrigatória: Web não envia senha atual e Backend não renova JWT; usuário pode ficar preso em mustChangePassword.\n\nP0  StrongPassword só existe no Web; domínio aceita senha fraca. Regra de negócio deve ser autoritativa no Identity.\n\nP1  Login/refresh usam transação, mas Result.fail não provoca rollback. Falha após uma escrita pode deixar sessão/rotação parcial.\n\nP1  ChangePassword e AdminReset alteram conta + sessões sem transação.\n\nP1  Bloqueio concorrente não usa versão/lock; cinco requisições simultâneas podem perder incrementos.\n\nP1  Banco não garante que Session.bancaId = UserAccount.bancaId; adicionar FK composta. Digest deveria ser UNIQUE.\n\nP1  Proxy/layout apenas decodificam JWT sem validar assinatura/expiração; podem renderizar a casca privada antes do 401.\n\nP1  Web chama /api relativo, mas não há rewrite de desenvolvimento para o Nest.\n\nP2  Circularidade Nest Identity ↔ Tenancy: mover ProvisionBanca para módulo de composição elimina forwardRef.\n\nP2  Segredos têm defaults inseguros; produção deve falhar no startup. Erros Prisma não devem vazar error.message.\n\nP2  Invariantes de Date/contador e erro de nome da Banca precisam endurecimento.", "autoResize": true, "lineHeight": 1.25
+    }
+  ],
+  "appState": {
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#f8f9fa"
+  },
+  "files": {}
+}

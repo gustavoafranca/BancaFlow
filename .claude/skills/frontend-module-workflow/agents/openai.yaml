@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Module Workflow"
+  short_description: "Implement and review module features in apps/web"
+  default_prompt: "Use $frontend-module-workflow to read the repo instructions, the applicable OpenSpec change/spec, and the current implementation before planning, implementing, or reviewing the requested Web slice in the right module."

@@ -1,0 +1,244 @@
+### Identity — roteiro de integração manual (VS Code REST Client)
+# Pré-requisito: banca `farizeu` ativa + conta OWNER (criadas pelo seed atômico via ProvisionBanca).
+# O `codigoBanca` vem do header Host (subdomínio); o corpo NUNCA envia codigoBanca/bancaId.
+# Cookies são host-only e HttpOnly — o REST Client mantém o cookie jar entre requisições.
+
+@host = farizeu.bancaflow.com.br
+@base = http://localhost:4000/api
+
+### 1. Login válido (tenant farizeu)
+# @name login
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": "owner",
+  "password": "TROCAR_PELA_SENHA_DO_SEED"
+}
+
+### 2. Senha inválida — 401 genérico (não revela existência)
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": "owner",
+  "password": "senha-errada"
+}
+
+### 3. Username inexistente — mesmo 401 genérico
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": "naoexiste",
+  "password": "qualquer"
+}
+
+### 4. Host/banca inválida (subdomínio reservado) — 401 genérico
+POST {{base}}/auth/login
+Host: api.bancaflow.com.br
+Content-Type: application/json
+
+{
+  "username": "owner",
+  "password": "qualquer"
+}
+
+### 5. Banca inexistente — 401 genérico
+POST {{base}}/auth/login
+Host: naoexiste.bancaflow.com.br
+Content-Type: application/json
+
+{
+  "username": "owner",
+  "password": "qualquer"
+}
+
+### 6. Bloqueio após 5 falhas em 15 min (repita 5x com senha errada; a 5ª bloqueia)
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": "owner",
+  "password": "senha-errada"
+}
+
+### 7. Refresh da sessão (usa o cookie refresh_token da requisição de login)
+# @name refresh
+POST {{base}}/auth/refresh
+Host: {{host}}
+
+### 8. Refresh com token já rotacionado — deve falhar 401
+# (execute #7 duas vezes seguidas; a segunda usa um token antigo → 401)
+POST {{base}}/auth/refresh
+Host: {{host}}
+
+### 9. Listar sessões ativas
+GET {{base}}/auth/sessions
+Host: {{host}}
+
+### 10. Revogar sessão específica (troque :id)
+DELETE {{base}}/auth/sessions/COLE_UM_SESSION_ID
+Host: {{host}}
+
+### 11. Logout da sessão atual
+POST {{base}}/auth/logout
+Host: {{host}}
+
+### 12. Acesso após revogação — deve falhar 401
+GET {{base}}/auth/sessions
+Host: {{host}}
+
+### 13. Logout global (todas as sessões)
+POST {{base}}/auth/logout-all
+Host: {{host}}
+
+### 14. Troca VOLUNTÁRIA de senha — exige currentPassword + newPassword.
+# Reemite o access token da MESMA sessão já com mustChangePassword=false
+# (sem precisar de um refresh() adicional).
+PATCH {{base}}/auth/password
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SENHA_ATUAL",
+  "newPassword": "NovaSenhaForte@123"
+}
+
+### 14b. Troca voluntária com senha ATUAL incorreta — 401 IDENTITY.INVALID_CREDENTIALS
+PATCH {{base}}/auth/password
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "currentPassword": "senha-errada",
+  "newPassword": "NovaSenhaForte@123"
+}
+
+### 14c. Troca voluntária com senha NOVA fraca — 422 IDENTITY.PASSWORD_TOO_WEAK
+# (mínimo 8 chars, com maiúscula, minúscula, número e símbolo)
+PATCH {{base}}/auth/password
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SENHA_ATUAL",
+  "newPassword": "fraca"
+}
+
+### 14d. Troca voluntária BLOQUEADA quando mustChangePassword=true (bug P0 corrigido)
+# Mesmo enviando a senha atual correta, este endpoint responde
+# 403 IDENTITY.MUST_CHANGE_PASSWORD enquanto a flag estiver ativa — o único
+# caminho de saída é o endpoint dedicado (#15).
+PATCH {{base}}/auth/password
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "currentPassword": "SENHA_TEMPORARIA_RECEBIDA",
+  "newPassword": "NovaSenhaForte@123"
+}
+
+### 15. Troca OBRIGATÓRIA de senha — SOMENTE newPassword (nunca currentPassword).
+# Autorizada por mustChangePassword=true no token (estado confiável do servidor,
+# não do body). Reemite o access token da MESMA sessão com mustChangePassword=false.
+PATCH {{base}}/auth/mandatory-password-change
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "newPassword": "NovaSenhaForte@123"
+}
+
+### 15b. Troca obrigatória com senha fraca — 422 IDENTITY.PASSWORD_TOO_WEAK
+PATCH {{base}}/auth/mandatory-password-change
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "newPassword": "fraca"
+}
+
+### 16. Redefinição administrativa (OWNER/ADMIN) — retorna senha temporária uma vez
+PATCH {{base}}/auth/admin/reset-password
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "targetUserId": "COLE_O_USER_ID_ALVO"
+}
+
+### 17. Ativar/desativar/bloquear/desbloquear conta (OWNER/ADMIN)
+PATCH {{base}}/accounts/COLE_O_USER_ID/status
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "action": "deactivate"
+}
+
+### 17b. Campo desconhecido no body é REJEITADO (ValidationPipe whitelist) — 400
+# Prova que um `bancaId` forjado no body nunca é lido pelo controller: o DTO
+# rejeita a requisição inteira antes de chegar ao caso de uso.
+PATCH {{base}}/accounts/COLE_O_USER_ID/status
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "action": "deactivate",
+  "bancaId": "banca-forjada-inexistente"
+}
+
+### 18. Login após redefinição administrativa — token traz mustChangePassword=true,
+# e rotas protegidas (exceto a troca obrigatória, #15) respondem
+# 403 IDENTITY.MUST_CHANGE_PASSWORD
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": "conta-resetada",
+  "password": "SENHA_TEMPORARIA_RECEBIDA"
+}
+
+### 19. Contexto do próprio usuário autenticado (após login #1)
+# 200 com { userId, username, name, email, role, banca: { bancaId, codigoBanca, name } }.
+# email pode ser null; NÃO contém isActive/status/credential. userId/bancaId vêm
+# do cookie (AuthContext), nunca do cliente.
+GET {{base}}/auth/me
+Host: {{host}}
+
+### 19b. /me sem sessão (sem cookie) — 401 genérico
+GET {{base}}/auth/me
+Host: {{host}}
+
+### 19c. Identificadores do cliente não têm autoridade — query/param são ignorados
+# O contexto é resolvido só pelo cookie; estes valores forjados não têm efeito.
+GET {{base}}/auth/me?userId=outro-usuario&bancaId=outra-banca&codigoBanca=outra
+Host: {{host}}
+
+### 19d. /me com mustChangePassword=true (após reset #16/login #18) — 403 MUST_CHANGE_PASSWORD
+# Sem @AllowPasswordChange: o guard bloqueia até a troca obrigatória (#15).
+GET {{base}}/auth/me
+Host: {{host}}
+
+### 19. DTO inválido — username null é rejeitado com 400 (class-validator)
+POST {{base}}/auth/login
+Host: {{host}}
+Content-Type: application/json
+
+{
+  "username": null,
+  "password": "qualquer"
+}
+
+# Notas de segurança não testáveis via REST Client (verificar manualmente):
+# - Secrets ausentes/curtos (< 32 chars) ou JWT_SECRET == REFRESH_TOKEN_SECRET
+#   fazem o backend falhar no startup (`process.exit(1)`) — ver
+#   `src/config/security.config.ts` e seus testes unitários.
+# - CORS: uma requisição XHR de origem fora de `CORS_ORIGINS` não recebe
+#   cabeçalhos de CORS na resposta (bloqueada pelo navegador).

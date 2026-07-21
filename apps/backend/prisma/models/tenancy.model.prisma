@@ -1,0 +1,18 @@
+// Prisma models for module: tenancy
+
+/// Tenant raiz. O `id` (UUID) é gerado pelo domínio (`BancaRepository.nextId`).
+/// `codigoBanca` armazena o valor normalizado (usado como subdomínio) e é único.
+model Banca {
+  id          String   @id
+  codigoBanca String   @unique
+  nome        String
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Campo de relação inverso (virtual, sem coluna) exigido pelo Prisma para a
+  // FK UserAccount.bancaId -> bancas.id. Adicionado pela change de Identity.
+  userAccounts UserAccount[]
+
+  @@map("bancas")
+}
