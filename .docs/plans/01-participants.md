@@ -7,10 +7,10 @@
 - **Estado:** `READY_FOR_SPEC`
 - **Roadmap:** [Plano mestre](00-bancaflow-mvp-roadmap.md)
 - **Contexto:** [Contexto do projeto](00-project-context.md)
-- **Prompt:** [INC-01 — participant registration](../prompts/11-implement-participant-registration-mvp.md)
-- **Change/spec:** ver decomposição; nenhuma criada
+- **Prompt:** [INC-01 — participant registration](../prompts/11-implement-participant-registration-mvp.md); [INC-02 — enable betting agent management](../prompts/22-enable-betting-agent-management.md)
+- **Change/spec:** ver decomposição; INC-01 (`implement-participant-registration-mvp`) e INC-02 (`enable-betting-agent-management`) implementadas; INC-03 segue em `DISCOVERY`
 - **Diagrama:** [Participants](../diagrams/01-participants.excalidraw)
-- **Atualizado em:** 2026-07-17
+- **Atualizado em:** 2026-07-21
 
 ## Objetivo e valor
 
@@ -30,7 +30,7 @@ Cada incremento é vertical: inclui Negócio, Backend, Web, testes e documentaç
 | Incremento | Resultado vertical | Escopo principal | Dependências | Change candidata | Estado |
 |---|---|---|---|---|---|
 | INC-01 | OWNER/ADMIN cadastra, pesquisa e consulta Cambistas reais em `/cambistas` | scaffold; Party PERSON; BettingAgent; código; perfil inicial opcional; política inicial; alerta de duplicidade; create/list/get; Prisma/API/Web | Identity e Tenancy concluídos | `implement-participant-registration-mvp` | `READY_FOR_SPEC` |
-| INC-02 | OWNER/ADMIN mantém perfil e ciclo de vida sem perder histórico | edição de nome/apelido/telefones; troca de endereço com vigência; ativação/inativação; endpoints e UI correspondentes | INC-01 arquivado | `implement-participant-maintenance-mvp` | `DISCOVERY` |
+| INC-02 | OWNER/ADMIN mantém perfil e ciclo de vida sem perder histórico | edição de nome/apelido/telefones; troca de endereço com vigência; ativação/inativação; endpoints e UI correspondentes | INC-01 arquivado | `enable-betting-agent-management` (nome real difere do previsto `implement-participant-maintenance-mvp` — ver desvio no DoD) | `IMPLEMENTED` |
 | INC-03 | OWNER/ADMIN agenda mudanças de remuneração com histórico íntegro | nova vigência hoje/futura; encerramento da anterior; bloqueio de lacuna/sobreposição/retroatividade; histórico e UI | INC-01 arquivado; regras financeiras de semana parcial continuam fora | `implement-betting-agent-compensation-history-mvp` | `DISCOVERY` |
 
 FieldCollector/Recolhe permanece fora destes increments e deverá ganhar plano/change próprios quando entrar no roadmap executável.
@@ -40,7 +40,7 @@ FieldCollector/Recolhe permanece fora destes increments e deverá ganhar plano/c
 | Incremento | Capability specs | Operação esperada |
 |---|---|---|
 | INC-01 | `participant-registration`, `betting-agent-catalog`, `betting-agent-compensation-policy` | ADDED; remuneração cobre somente política inicial |
-| INC-02 | `participant-profile-management`, `betting-agent-lifecycle`, `betting-agent-catalog` | ADDED/MODIFIED |
+| INC-02 | `authoritative-permission-catalog` (MODIFIED), `betting-agent-catalog` (MODIFIED), `participant-registration` (MODIFIED) — ver desvio no DoD | entregue como MODIFIED nas capabilities já existentes, sem criar `participant-profile-management`/`betting-agent-lifecycle` |
 | INC-03 | `betting-agent-compensation-policy` | MODIFIED para vigências e histórico |
 
 O prompt atual deve selecionar somente o INC-01. INC-02 e INC-03 são obrigatoriamente fora de escopo até cumprirem suas dependências e passarem por revisão de readiness própria.
@@ -257,11 +257,12 @@ Sem documento não há deduplicação perfeita; o alerta é heurístico e não p
 
 ## Definition of Done
 
-- [ ] Implementação/desvios rastreados
-- [ ] Testes ligados aos critérios
-- [ ] Isolamento, autorização e migration verificados
-- [ ] Plano, spec, código, testes e diagrama reconciliados
-- [ ] Documentação atualizada e arquivamento autorizado
+- [x] Implementação/desvios rastreados — INC-01 entregue via `implement-participant-registration-mvp`. Desvios: (1) scaffold `config-new-module` em modo `domain-backend` (não `fullstack`) para reutilizar o módulo web `cambistas` existente; (2) autorização "catalog wins" — `USER` bloqueado apenas na criação (list/read read-only), relaxando a leitura original de D23 para aderir ao catálogo autoritativo de `access-control`.
+- [x] Testes ligados aos critérios — domínio (28 specs: código `001`, política, endereço, duplicidade), backend e2e em Postgres real (unicidade por Banca, corrida de código, isolamento por tenant, autorização, duplicidade confirmável, rollback) e Web (loading/vazio/erro/sucesso/conflito/confirmação/teclado).
+- [x] Isolamento, autorização e migration verificados — e2e prova tenant A ≠ tenant B (404 sem revelar existência), OWNER/ADMIN criam e USER é bloqueado na criação; migration aplicada em Postgres real com `@@unique([bancaId, code])` e FK composta de mesma-Banca.
+- [x] Plano, spec, código, testes e diagrama reconciliados — spec `betting-agent-catalog` atualizada para "catalog wins"; código/testes alinhados. (Diagrama Excalidraw permanece válido no nível conceitual; sem mudança estrutural de agregados.)
+- [ ] Documentação atualizada e arquivamento autorizado — READMEs do módulo criados; arquivamento aguarda autorização do responsável.
+- [x] INC-02 implementado via `enable-betting-agent-management` (`PATCH /participants/betting-agents/:id` e `/:id/status`, contatos/endereço reconciliados por substituição total, drawer Web unificado add/view/edit). Desvios frente ao previsto neste plano: (1) nome da change é `enable-betting-agent-management`, não o `implement-participant-maintenance-mvp` cotado na tabela de increments; (2) as capability specs entregues são `authoritative-permission-catalog`/`betting-agent-catalog`/`participant-registration` (todas MODIFIED), em vez de criar `participant-profile-management`/`betting-agent-lifecycle` como capabilities novas — o incremento coube inteiramente como extensão das capabilities já existentes do INC-01, sem introduzir conceitos novos que justificassem capabilities próprias; (3) o prompt de origem (`.docs/prompts/22-enable-betting-agent-management.md`) pediu também "permissão por perfil para cadastrar/alterar/ler Cambista", não previsto neste plano — resolvido estendendo o catálogo autoritativo já existente (`participants.betting-agents.update`, OWNER/ADMIN concedem, USER nega) em vez de criar configuração de permissões persistida por Banca (decisão D1 da change, para não reabrir `authoritative-permission-catalog`/`settings-capability-visibility` já aplicadas). Testes: domínio (VOs/entidades/casos de uso, reconciliação de contatos/endereço, idempotência de status), backend e2e em Postgres real (edição, imutabilidade de `code`/política, status idempotente e tenant-scoped, autorização, matriz de permissões) e Web (drawer nos 3 modos, `PhoneInput`, navegação por abas, permissões).
 
 ## Conflitos e descobertas posteriores
 
@@ -276,3 +277,4 @@ Sem documento não há deduplicação perfeita; o alerta é heurístico e não p
 | 2026-07-17 | baseline desconhecido | DECISIONS_PENDING | decisões D18–D22 | retomada com plan-spec-roadmap |
 | 2026-07-17 | DECISIONS_PENDING | READY_FOR_SPEC | D18–D29 decididas, plano completo, diagrama sincronizado e gates aprovados | planejamento apto a gerar prompt; spec ainda não criada |
 | 2026-07-17 | READY_FOR_SPEC | READY_FOR_SPEC | INC-01–INC-03 decompostos; INC-01 revalidado | evitar change monolítica e preservar entrega vertical |
+| 2026-07-21 | DISCOVERY (INC-02) | IMPLEMENTED (INC-02) | change `enable-betting-agent-management` aplicada (domínio + backend + Web + testes reais em Postgres) | INC-02 concluído; ver desvios registrados no DoD |

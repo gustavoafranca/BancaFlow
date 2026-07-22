@@ -32,6 +32,7 @@
   "dependencies": {
     "@bancaflow/access-control": "*",
     "@bancaflow/identity": "*",
+    "@bancaflow/participants": "*",
     "@bancaflow/shared": "*",
     "@bancaflow/tenancy": "*",
     "@nestjs/common": "^11.0.1",

@@ -167,6 +167,23 @@ describe('Access Control — role-permissions e me/permissions (integration, rea
     }
   });
 
+  it('a matriz completa inclui participants.betting-agents.update, concedida a OWNER/ADMIN e negada a USER', async () => {
+    const cookie = await loginAs('owner');
+    const res = await request(app.getHttpServer())
+      .get('/api/access-control/role-permissions')
+      .set('Host', hostFor())
+      .set('Cookie', cookie);
+
+    expect(res.status).toBe(200);
+    const body = res.body as RolePermissionMatrixBody;
+    const entry = body.capabilities
+      .flatMap((c) => c.permissions)
+      .find((p) => p.key === 'participants.betting-agents.update');
+    expect(entry).toBeDefined();
+    expect(entry!.roles.sort()).toEqual(['ADMIN', 'OWNER'].sort());
+    expect(entry!.roles).not.toContain('USER');
+  });
+
   it('ADMIN é negado ao tentar ler a matriz completa nesta versão (só OWNER administra contas e acessos)', async () => {
     const cookie = await loginAs('admin');
     const res = await request(app.getHttpServer())

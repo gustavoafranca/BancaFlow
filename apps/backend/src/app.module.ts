@@ -7,9 +7,11 @@ import { AccessControlModule } from './modules/access-control/access-control.mod
 import { IdentityModule } from './modules/identity/identity.module';
 import { TenancyModule } from './modules/tenancy/tenancy.module';
 import { PlatformProvisioningModule } from './modules/platform/platform-provisioning.module';
+import { ParticipantsModule } from './modules/participants/participants.module';
 
 @Module({
   imports: [
+    ParticipantsModule,
     IdentityModule,
     TenancyModule,
     PlatformProvisioningModule,

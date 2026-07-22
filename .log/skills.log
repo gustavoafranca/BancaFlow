@@ -261,3 +261,17 @@
 - [RISK] sobrescrita detectada: apps/web/package.json
 - [STEP] Frontend package atualizado com dependência @bancaflow/identity@*: /home/gustavo/Projetos/BancaFlow/apps/web/package.json
 
+# config-new-module
+- [CMD] `node .claude/skills/config-new-module/scripts/create-module.mjs participants --mode domain-backend`
+- [FILE_CREATE] modules/participants/package.json package do domínio
+- [FILE_CREATE] modules/participants/tsconfig.json tsconfig do domínio
+- [FILE_CREATE] modules/participants/jest.config.ts Jest do domínio
+- [FILE_CREATE] modules/participants/src/index.ts API pública vazia do domínio
+- [FILE_CREATE] apps/backend/src/modules/participants/participants.module.ts módulo NestJS vazio
+- [FILE_CREATE] apps/backend/src/modules/participants/index.ts API pública do adapter backend
+- [FILE_CREATE] apps/backend/prisma/models/participants.model.prisma fronteira Prisma do módulo
+- [FILE_UPDATE] apps/backend/src/app.module.ts participants module registration
+- [STEP] Módulo NestJS registrado: participants
+- [FILE_UPDATE] apps/backend/package.json workspace dependency @bancaflow/participants
+- [STEP] Dependência registrada: @bancaflow/participants em /home/gustavo/Projetos/BancaFlow/apps/backend/package.json
+

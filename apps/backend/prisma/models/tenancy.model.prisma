@@ -14,5 +14,9 @@ model Banca {
   // FK UserAccount.bancaId -> bancas.id. Adicionado pela change de Identity.
   userAccounts UserAccount[]
 
+  // Campo de relação inverso (virtual, sem coluna) exigido pelo Prisma para a
+  // FK Party.bancaId -> bancas.id. Adicionado pela change de Participants.
+  parties Party[]
+
   @@map("bancas")
 }

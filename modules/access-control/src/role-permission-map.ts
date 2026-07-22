@@ -18,6 +18,7 @@ export const ROLE_PERMISSION_MAP: Readonly<Record<AccountRoleType, readonly Perm
     'identity.profile.update-own',
     'identity.password.change-own',
     'participants.betting-agents.create',
+    'participants.betting-agents.update',
     'participants.betting-agents.list',
     'participants.betting-agents.read',
   ],

@@ -19,6 +19,19 @@ export const TECHNICAL_ERROR_CODES = {
   IDENTITY_USER_ACCOUNT_QUERY: 'IDENTITY.USER_ACCOUNT_QUERY_ERROR',
   /** Falha técnica da query de contexto de exibição da banca do Tenancy. */
   TENANCY_BANCA_DISPLAY_QUERY: 'TENANCY.BANCA_DISPLAY_QUERY_ERROR',
+  /** Falha técnica ao persistir a Party (agregado do Participants). */
+  PARTICIPANTS_PARTY_SAVE: 'PARTICIPANTS.PARTY_SAVE_ERROR',
+  /** Falha técnica ao buscar uma Party por id. */
+  PARTICIPANTS_PARTY_FIND: 'PARTICIPANTS.PARTY_FIND_ERROR',
+  /** Falha técnica ao persistir o BettingAgent (agregado do Participants). */
+  PARTICIPANTS_BETTING_AGENT_SAVE: 'PARTICIPANTS.BETTING_AGENT_SAVE_ERROR',
+  /** Falha técnica ao buscar um BettingAgent por id. */
+  PARTICIPANTS_BETTING_AGENT_FIND: 'PARTICIPANTS.BETTING_AGENT_FIND_ERROR',
+  /** Falha técnica da query de listagem/detalhe de BettingAgent. */
+  PARTICIPANTS_BETTING_AGENT_QUERY: 'PARTICIPANTS.BETTING_AGENT_QUERY_ERROR',
+  /** Falha técnica da query de possível duplicidade de Party. */
+  PARTICIPANTS_PARTY_DUPLICATE_QUERY:
+    'PARTICIPANTS.PARTY_DUPLICATE_QUERY_ERROR',
 } as const;
 
 export type TechnicalErrorCode =

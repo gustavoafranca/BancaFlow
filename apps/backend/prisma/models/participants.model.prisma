@@ -1,0 +1,118 @@
+// Prisma models for module: participants
+//
+// Convenções (design T6): `id String @id` é UUID gerado no domínio (sem
+// `@default`); `@@map` snake_case no plural; status/tipo como `String`;
+// timestamps de auditoria. Dinheiro é inteiro em centavos (`Int`), nunca float
+// binário; percentual é `Decimal`. Integridade de tenant/relacionamento é
+// reforçada por FKs; nenhuma cascata destrutiva de histórico (`onDelete`
+// padrão = Restrict).
+
+/// Identidade cadastral (pessoa natural). `bancaId` referencia a Banca (tenant).
+/// `@@unique([bancaId, id])` habilita a FK composta de `BettingAgent`, que reforça
+/// no banco que Party e BettingAgent pertencem à MESMA Banca.
+model Party {
+  id                 String   @id
+  bancaId            String
+  type               String
+  name               String?
+  nameNormalized     String?
+  nickname           String?
+  nicknameNormalized String?
+  createdBy          String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  banca         Banca          @relation(fields: [bancaId], references: [id])
+  contacts      PartyContact[]
+  addresses     PartyAddress[]
+  bettingAgents BettingAgent[]
+
+  @@unique([bancaId, id])
+  @@index([bancaId])
+  @@map("parties")
+}
+
+/// Telefone da Party (vários permitidos). `phone` é o valor normalizado (dígitos).
+/// Entidade filha do agregado Party — sem repositório público próprio.
+model PartyContact {
+  id        String   @id
+  partyId   String
+  phone     String
+  label     String?
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  party Party @relation(fields: [partyId], references: [id])
+
+  @@index([partyId])
+  @@index([phone])
+  @@map("party_contacts")
+}
+
+/// Endereço da Party. Bairro/cidade obrigatórios (exibição + normalizado); rua/
+/// número opcionais. Versionável por `EffectivePeriod`; no máximo um ativo
+/// (`effectiveTo IS NULL`) garantido pelo domínio. Entidade filha do agregado.
+model PartyAddress {
+  id                     String    @id
+  partyId                String
+  street                 String?
+  number                 String?
+  neighborhood           String
+  neighborhoodNormalized String
+  city                   String
+  cityNormalized         String
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  party Party @relation(fields: [partyId], references: [id])
+
+  @@index([partyId])
+  @@map("party_addresses")
+}
+
+/// Perfil operacional do Cambista. Código único por Banca (`@@unique([bancaId,
+/// code])`); no máximo um BettingAgent por Party na Banca (`@@unique([bancaId,
+/// partyId])`). A FK composta `(bancaId, partyId) -> Party(bancaId, id)` reforça
+/// que ambos pertencem à mesma Banca.
+model BettingAgent {
+  id        String   @id
+  bancaId   String
+  partyId   String
+  code      String
+  status    String   @default("ACTIVE")
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  party                Party                            @relation(fields: [bancaId, partyId], references: [bancaId, id])
+  compensationPolicies BettingAgentCompensationPolicy[]
+
+  @@unique([bancaId, code])
+  @@unique([bancaId, partyId])
+  @@index([bancaId])
+  @@map("betting_agents")
+}
+
+/// Política de remuneração versionável por vigência. Tabela dedicada desde já
+/// (compatível com histórico futuro). `weeklyFixedAmountCents` é inteiro em
+/// centavos; `percentage` é Decimal(5,2). Neste incremento há apenas a política
+/// inicial (vigência aberta iniciando na criação).
+model BettingAgentCompensationPolicy {
+  id                     String    @id
+  bettingAgentId         String
+  type                   String
+  percentage             Decimal?  @db.Decimal(5, 2)
+  weeklyFixedAmountCents Int?
+  effectiveFrom          DateTime
+  effectiveTo            DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  bettingAgent BettingAgent @relation(fields: [bettingAgentId], references: [id])
+
+  @@index([bettingAgentId])
+  @@map("betting_agent_compensation_policies")
+}

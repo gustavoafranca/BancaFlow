@@ -49,10 +49,25 @@ export class ApiExceptionFilter implements ExceptionFilter {
         ? (raw as unknown[]).map((item) => String(item))
         : [String(raw)];
 
+      // Passa adiante, quando presentes no payload, o código de domínio estável
+      // e um payload auxiliar (`details`) — ex.: os candidatos de possível
+      // duplicidade do Participants. Aditivo: só aparece quando o controller os
+      // fornece; demais respostas de erro permanecem inalteradas.
+      const code =
+        typeof payload === 'object' && payload !== null
+          ? (payload as { code?: unknown }).code
+          : undefined;
+      const details =
+        typeof payload === 'object' && payload !== null
+          ? (payload as { details?: unknown }).details
+          : undefined;
+
       return {
         statusCode: status,
         error: exception.name,
         message,
+        ...(typeof code === 'string' ? { code } : {}),
+        ...(Array.isArray(details) ? { details } : {}),
         path,
         timestamp,
       };

@@ -1,5 +1,7 @@
 export * from './account-role.type';
+export * from './clock.port';
 export * from './entity';
+export * from './permission-checker.port';
 export * from './result-error';
 export * from './result-validator';
 export * from './result';

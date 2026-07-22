@@ -133,8 +133,18 @@ async function isTenantAvailable(request: NextRequest): Promise<boolean> {
 // `/unavailable` fica FORA do matcher: é a página genérica de host
 // indisponível, deve ser visitável diretamente sem exigir sessão. As demais
 // exclusões são os caminhos que o Next já trata antes de rotas de página
-// (`api`, assets estáticos, otimização de imagem, favicon). O route group
-// `(private)` NÃO aparece na URL, então nunca é usado no matcher.
+// (`api`, assets estáticos, otimização de imagem, favicon) — mais qualquer
+// arquivo estático servido de `public/` (`.*\..*`, ex.: `/design-imports/**`),
+// já que nenhuma rota de página deste app usa ponto no pathname. Sem essa
+// exclusão, o proxy intercepta a própria imagem (auth/redirect) e devolve
+// HTML no lugar do binário — doc local confirma:
+// `node_modules/next/dist/docs/.../file-conventions/proxy.md` ("Without a
+// matcher, Proxy runs on every request, including... assets in the public/
+// folder... otherwise auth logic or redirects can unintentionally block CSS,
+// JS, or images from loading"). O route group `(private)` NÃO aparece na
+// URL, então nunca é usado no matcher.
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|unavailable).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|unavailable|.*\\..*).*)',
+  ],
 }

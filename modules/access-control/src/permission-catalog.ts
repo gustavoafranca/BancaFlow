@@ -125,6 +125,13 @@ export const PERMISSION_CATALOG = [
         description: 'Ver o detalhe de um Cambista da própria Banca',
         order: 3,
       },
+      {
+        key: 'participants.betting-agents.update',
+        label: 'Editar Cambista',
+        description:
+          'Alterar dados cadastrais (nome, apelido, contatos, endereço) e ativar/inativar um Cambista da própria Banca',
+        order: 4,
+      },
     ],
   },
   {

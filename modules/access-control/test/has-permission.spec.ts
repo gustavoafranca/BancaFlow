@@ -16,6 +16,7 @@ describe('hasPermission', () => {
       'identity.profile.update-own',
       'identity.password.change-own',
       'participants.betting-agents.create',
+      'participants.betting-agents.update',
       'participants.betting-agents.list',
       'participants.betting-agents.read',
     ] as const;
@@ -42,7 +43,7 @@ describe('hasPermission', () => {
     }
   });
 
-  it('denies USER for account-administration, matrix-read, and betting-agent-create permission keys', () => {
+  it('denies USER for account-administration, matrix-read, and betting-agent-create/update permission keys', () => {
     const deniedForUser = [
       'identity.accounts.list',
       'identity.accounts.read',
@@ -54,6 +55,7 @@ describe('hasPermission', () => {
       'identity.accounts.sessions.read',
       'identity.accounts.sessions.revoke',
       'participants.betting-agents.create',
+      'participants.betting-agents.update',
       'access-control.role-permissions.read',
     ] as const;
     for (const key of deniedForUser) {

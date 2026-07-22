@@ -43,11 +43,12 @@ import {
 } from '@nestjs/common';
 import { DbModule } from '../../db/db.module';
 import { PrismaService } from '../../db/prisma.service';
+import { AccessControlPermissionChecker } from '../../shared/adapters/access-control-permission-checker.adapter';
+import { SystemClockProvider } from '../../shared/adapters/system-clock.provider';
 import { TenantResolverMiddleware } from '../../shared/middleware/tenant-resolver.middleware';
 import { BancaContextResolver as BancaContextResolverAdapter } from '../tenancy/adapters/banca-context.resolver';
 import { BancaDisplayContextResolver as BancaDisplayContextResolverAdapter } from '../tenancy/adapters/banca-display-context.resolver';
 import { TenancyModule } from '../tenancy/tenancy.module';
-import { AccessControlPermissionChecker } from './adapters/access-control-permission-checker.adapter';
 import { AuthenticatedUserAccountQueryPrisma } from './adapters/authenticated-user-account.query.prisma';
 import { BcryptPasswordCryptoProvider } from './adapters/bcrypt-password-crypto.provider';
 import { JwtAccessTokenIssuer } from './adapters/jwt-access-token.issuer';
@@ -55,7 +56,6 @@ import { ListUserAccountsQueryPrisma } from './adapters/list-user-accounts.query
 import { HmacRefreshTokenDigester } from './adapters/refresh-token.digester';
 import { CryptoRefreshTokenGenerator } from './adapters/refresh-token.generator';
 import { SessionRepositoryPrisma } from './adapters/session.repository.prisma';
-import { SystemClockProvider } from './adapters/system-clock.provider';
 import { CryptoTemporaryPasswordGenerator } from './adapters/temporary-password.generator';
 import { UserAccountRepositoryPrisma } from './adapters/user-account.repository.prisma';
 import { AccountsController } from './accounts.controller';
