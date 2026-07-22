@@ -33,7 +33,11 @@ interface DetailBody {
   id: string;
   code: string;
   status: string;
-  policy: { type: string; weeklyFixedAmountCents: number | null };
+  policy: {
+    type: string;
+    percentage: number | null;
+    weeklyFixedAmountCents: number | null;
+  };
   party: {
     name: string | null;
     nickname: string | null;
@@ -150,6 +154,19 @@ describe('BettingAgentController — /api/participants/betting-agents (integrati
       .set('Host', hostFor(codigo))
       .set('Cookie', cookie)
       .send({ status });
+  }
+
+  function updatePolicy(
+    codigo: string,
+    cookie: string,
+    id: string,
+    policy: Record<string, unknown>,
+  ) {
+    return request(app.getHttpServer())
+      .patch(`/api/participants/betting-agents/${id}/policy`)
+      .set('Host', hostFor(codigo))
+      .set('Cookie', cookie)
+      .send({ policy });
   }
 
   beforeAll(async () => {
@@ -577,6 +594,113 @@ describe('BettingAgentController — /api/participants/betting-agents (integrati
 
       const ownerB = await loginAs(CODE_B, 'ownerb');
       const result = await setStatus(CODE_B, ownerB!, id, 'INACTIVE');
+      expect(result.status).toBe(404);
+    });
+  });
+
+  describe('PATCH /api/participants/betting-agents/:id/policy (enable-betting-agent-policy-update)', () => {
+    it('OWNER altera a política; a anterior fica com effectiveTo e a nova fica vigente', async () => {
+      const owner = await loginAs(CODE_A, 'owner');
+      const created = await createAgent(
+        CODE_A,
+        owner!,
+        validBody({
+          code: '401',
+          policy: { type: 'PERCENTAGE_ON_SALES', percentage: 10 },
+        }),
+      );
+      const id = (created.body as CreatedBody).bettingAgentId;
+
+      const changed = await updatePolicy(CODE_A, owner!, id, {
+        type: 'FIXED_WEEKLY',
+        weeklyFixedAmountCents: 50000,
+      });
+      expect(changed.status).toBe(200);
+
+      const detail = await getDetail(CODE_A, owner!, id);
+      const body = detail.body as DetailBody;
+      expect(body.policy.type).toBe('FIXED_WEEKLY');
+      expect(body.policy.weeklyFixedAmountCents).toBe(50000);
+
+      const rows = await prisma.client.bettingAgentCompensationPolicy.findMany({
+        where: { bettingAgentId: id },
+        orderBy: { createdAt: 'asc' },
+      });
+      expect(rows).toHaveLength(2);
+      expect(rows[0].type).toBe('PERCENTAGE_ON_SALES');
+      expect(rows[0].effectiveTo).not.toBeNull();
+      expect(rows[1].type).toBe('FIXED_WEEKLY');
+      expect(rows[1].effectiveTo).toBeNull();
+    });
+
+    it('ADMIN altera política; USER é bloqueado (403)', async () => {
+      const owner = await loginAs(CODE_A, 'owner');
+      const created = await createAgent(
+        CODE_A,
+        owner!,
+        validBody({ code: '402' }),
+      );
+      const id = (created.body as CreatedBody).bettingAgentId;
+
+      const admin = await loginAs(CODE_A, 'admin');
+      const byAdmin = await updatePolicy(CODE_A, admin!, id, {
+        type: 'PERCENTAGE_ON_SALES',
+        percentage: 25,
+      });
+      expect(byAdmin.status).toBe(200);
+
+      const member = await loginAs(CODE_A, 'member');
+      const byUser = await updatePolicy(CODE_A, member!, id, {
+        type: 'PERCENTAGE_ON_SALES',
+        percentage: 30,
+      });
+      expect(byUser.status).toBe(403);
+    });
+
+    it('rejeita FIXED_PER_ENTRY e valores inválidos (400), mantendo a política anterior', async () => {
+      const owner = await loginAs(CODE_A, 'owner');
+      const created = await createAgent(
+        CODE_A,
+        owner!,
+        validBody({
+          code: '403',
+          policy: { type: 'PERCENTAGE_ON_SALES', percentage: 10 },
+        }),
+      );
+      const id = (created.body as CreatedBody).bettingAgentId;
+
+      const rejectedType = await updatePolicy(CODE_A, owner!, id, {
+        type: 'FIXED_PER_ENTRY',
+        weeklyFixedAmountCents: 1000,
+      });
+      expect(rejectedType.status).toBe(400);
+
+      const rejectedValue = await updatePolicy(CODE_A, owner!, id, {
+        type: 'PERCENTAGE_ON_SALES',
+        percentage: -5,
+      });
+      expect(rejectedValue.status).toBe(400);
+
+      const detail = await getDetail(CODE_A, owner!, id);
+      const body = detail.body as DetailBody;
+      expect(body.policy.type).toBe('PERCENTAGE_ON_SALES');
+      expect(body.policy.percentage).toBe(10);
+    });
+
+    it('isolamento de tenant: Banca B não altera política de Cambista da Banca A (404)', async () => {
+      const ownerA = await loginAs(CODE_A, 'owner');
+      const created = await createAgent(
+        CODE_A,
+        ownerA!,
+        validBody({ code: '404' }),
+      );
+      const id = (created.body as CreatedBody).bettingAgentId;
+
+      const ownerB = await loginAs(CODE_B, 'ownerb');
+      const result = await updatePolicy(CODE_B, ownerB!, id, {
+        type: 'PERCENTAGE_ON_SALES',
+        percentage: 40,
+      });
       expect(result.status).toBe(404);
     });
   });

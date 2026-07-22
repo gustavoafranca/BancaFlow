@@ -7,14 +7,38 @@
 // aqui são três funções distintas e nomeadas pelo comportamento, não uma
 // unificação forçada que mudaria a saída visual de um dos dois consumidores.
 
-/** Iniciais (até 2 letras) do nome — mesma lógica usada em `lancamentos` e `acerto` (lá como `initialsOf`). */
+/**
+ * Iniciais do nome: primeiro nome + último nome (sobrenome) — nomes do meio
+ * são ignorados (ex.: "Gustavo de Avelar França" → "GF", não "GD"). Nome com
+ * uma palavra só usa a própria inicial.
+ */
 export function initials(nome: string): string {
-  return nome
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
+  const parts = nome.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ''
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+/**
+ * Classes Tailwind (`bg-gradient-to-br from-[..] to-[..]`) para o avatar
+ * circular de listagem/drawer, escolhidas deterministicamente por hash do
+ * `seed` (ex.: id do registro) — mesma paleta usada pelos avatares por tipo
+ * de `pessoas.sample.ts` (`AVATAR_BY_TIPO`), estendida para entidades sem
+ * uma dimensão de agrupamento natural (ex.: Cambista).
+ */
+const AVATAR_GRADIENT_CLASSES = [
+  'bg-gradient-to-br from-[#005533] to-[#00C773]',
+  'bg-gradient-to-br from-[#1a3a6a] to-[#4a7ac4]',
+  'bg-gradient-to-br from-[#5a3a00] to-[#c47a10]',
+  'bg-gradient-to-br from-[#003366] to-[#0066CC]',
+  'bg-gradient-to-br from-[#4a1a5a] to-[#a44ac4]',
+  'bg-gradient-to-br from-[#5a0a1a] to-[#c43a5a]',
+] as const
+
+export function avatarGradientClass(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+  return AVATAR_GRADIENT_CLASSES[Math.abs(hash) % AVATAR_GRADIENT_CLASSES.length]
 }
 
 /**

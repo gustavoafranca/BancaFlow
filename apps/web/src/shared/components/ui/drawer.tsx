@@ -205,6 +205,8 @@ export interface DrawerFooterProps {
   onEdit?: () => void
   /** Ação de exclusão, exibida em modo `edit`. Omitir oculta o botão (sem permissão ou sem contrato de backend). */
   onDelete?: () => void
+  /** Ação de desistir da edição em modo `edit`, descartando alterações e voltando ao modo `view` sem fechar o painel. Quando fornecida, substitui o botão "Fechar" por "Cancelar" nesse modo. */
+  onCancel?: () => void
   loading?: boolean
   saveLabel?: string
   savingLabel?: string
@@ -215,9 +217,12 @@ export interface DrawerFooterProps {
 
 /**
  * Rodapé fixo por modo (tarefa 2.2/2.3): criação = Fechar+Salvar; edição =
- * Excluir(quando fornecido)+Fechar+Salvar Alterações; visualização =
- * Fechar+Editar(quando fornecido). Ação de excluir abre modal de confirmação
- * próprio, sem cada consumidor reimplementar a confirmação.
+ * Excluir(quando fornecido)+Cancelar(quando fornecido, senão Fechar)+Salvar
+ * Alterações; visualização = Fechar+Editar(quando fornecido). "Cancelar"
+ * descarta as alterações e volta ao modo `view` sem fechar o painel — dá ao
+ * usuário como desistir da edição sem perder o contexto. Ação de excluir
+ * abre modal de confirmação próprio, sem cada consumidor reimplementar a
+ * confirmação.
  */
 export function DrawerFooter({
   mode,
@@ -225,6 +230,7 @@ export function DrawerFooter({
   onSave,
   onEdit,
   onDelete,
+  onCancel,
   loading = false,
   saveLabel,
   savingLabel = 'Salvando...',
@@ -235,6 +241,7 @@ export function DrawerFooter({
   const [confirmingDelete, setConfirmingDelete] = React.useState(false)
   const resolvedSaveLabel = saveLabel ?? (mode === 'create' ? 'Salvar' : 'Salvar Alterações')
   const showDelete = mode === 'edit' && Boolean(onDelete)
+  const showCancel = mode === 'edit' && Boolean(onCancel)
 
   return (
     <>
@@ -245,8 +252,8 @@ export function DrawerFooter({
           </Button>
         )}
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" disabled={loading} onClick={onClose}>
-            Fechar
+          <Button type="button" variant="outline" disabled={loading} onClick={showCancel ? onCancel : onClose}>
+            {showCancel ? 'Cancelar' : 'Fechar'}
           </Button>
           {mode === 'view'
             ? onEdit && (

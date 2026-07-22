@@ -3,6 +3,7 @@ import {
   GetBettingAgentUseCase,
   ListBettingAgentsUseCase,
   SetBettingAgentStatusUseCase,
+  UpdateBettingAgentPolicyUseCase,
   UpdateBettingAgentProfileUseCase,
 } from '@bancaflow/participants';
 import type {
@@ -38,6 +39,7 @@ import {
   PERMISSION_CHECKER,
   SET_BETTING_AGENT_STATUS_USE_CASE,
   TRANSACTION_MANAGER,
+  UPDATE_BETTING_AGENT_POLICY_USE_CASE,
   UPDATE_BETTING_AGENT_PROFILE_USE_CASE,
 } from './participants.tokens';
 
@@ -112,7 +114,14 @@ import {
         permissions: PermissionChecker,
         clock: Clock,
         tx: TransactionManager,
-      ) => new UpdateBettingAgentProfileUseCase(agents, parties, permissions, clock, tx),
+      ) =>
+        new UpdateBettingAgentProfileUseCase(
+          agents,
+          parties,
+          permissions,
+          clock,
+          tx,
+        ),
       inject: [
         BETTING_AGENT_REPOSITORY,
         PARTY_REPOSITORY,
@@ -129,7 +138,27 @@ import {
         clock: Clock,
         tx: TransactionManager,
       ) => new SetBettingAgentStatusUseCase(agents, permissions, clock, tx),
-      inject: [BETTING_AGENT_REPOSITORY, PERMISSION_CHECKER, CLOCK, TRANSACTION_MANAGER],
+      inject: [
+        BETTING_AGENT_REPOSITORY,
+        PERMISSION_CHECKER,
+        CLOCK,
+        TRANSACTION_MANAGER,
+      ],
+    },
+    {
+      provide: UPDATE_BETTING_AGENT_POLICY_USE_CASE,
+      useFactory: (
+        agents: BettingAgentRepository,
+        permissions: PermissionChecker,
+        clock: Clock,
+        tx: TransactionManager,
+      ) => new UpdateBettingAgentPolicyUseCase(agents, permissions, clock, tx),
+      inject: [
+        BETTING_AGENT_REPOSITORY,
+        PERMISSION_CHECKER,
+        CLOCK,
+        TRANSACTION_MANAGER,
+      ],
     },
   ],
 })

@@ -187,12 +187,22 @@ describe('UsuariosSection — linha clicável/teclável abre o drawer de detalhe
 
     expect(within(drawer).getByText('Visualização')).toBeInTheDocument()
     expect(within(drawer).queryByLabelText(/^nome$/i)).not.toBeInTheDocument()
-    expect(within(drawer).getByText('User One Silva', { selector: 'span' })).toBeInTheDocument()
+    expect(within(drawer).getAllByText('User One Silva').length).toBeGreaterThanOrEqual(2) // título do drawer + campo Nome
     expect(within(drawer).getByRole('button', { name: /^editar$/i })).toBeInTheDocument()
 
     await user.click(within(drawer).getByRole('button', { name: /^editar$/i }))
     expect(within(drawer).getByLabelText(/^nome$/i)).toBeInTheDocument()
     expect(within(drawer).queryByText('Visualização')).not.toBeInTheDocument()
+
+    // Cancelar (não "Fechar") descarta a edição e volta para o modo visualização sem fechar o painel.
+    const nameInput = within(drawer).getByLabelText(/^nome$/i)
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Nome Alterado')
+    expect(within(drawer).queryByRole('button', { name: /^fechar$/i })).not.toBeInTheDocument()
+    await user.click(within(drawer).getByRole('button', { name: /^cancelar$/i }))
+
+    expect(within(drawer).getByText('Visualização')).toBeInTheDocument()
+    expect(within(drawer).getAllByText('User One Silva').length).toBeGreaterThanOrEqual(2)
   })
 })
 

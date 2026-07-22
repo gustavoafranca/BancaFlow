@@ -17,6 +17,8 @@ import { Drawer, DrawerContent, DrawerBody, DrawerFooter } from '@/shared/compon
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Badge } from '@/shared/components/ui/badge'
+import { FormField } from '@/shared/components/ui/form-field'
+import { ReadOnlyField } from '@/shared/components/ui/read-only-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select'
 import { SelectionButtonGroup, type SelectionButtonOption } from '@/shared/components/ui/selection-button-group'
 import { roleLabel } from '@/shared/lib/role.util'
@@ -276,6 +278,13 @@ function AccountDetail({
     }
   }, [account, reset])
 
+  function cancelEdit() {
+    if (!account) return
+    setDetailMode('view')
+    setEditSubmitStatus('idle')
+    reset({ username: account.username, name: account.name, email: account.email ?? undefined })
+  }
+
   const onSubmitEdit = handleSubmit(async (data) => {
     if (!account) return
     setEditSubmitStatus('idle')
@@ -525,6 +534,7 @@ function AccountDetail({
           <DrawerFooter
             mode="edit"
             onClose={() => onOpenChange(false)}
+            onCancel={cancelEdit}
             onSave={() => void onSubmitEdit()}
             loading={isSubmitting}
           />
@@ -608,66 +618,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       </h2>
       {children}
     </section>
-  )
-}
-
-function ReadOnlyField({ label, value }: { label: string; value: string }) {
-  const { c } = useTheme()
-  return (
-    <div>
-      <span
-        style={{
-          display: 'block',
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          color: c.muted,
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </span>
-      <span style={{ fontSize: 13.5, color: c.text }}>{value}</span>
-    </div>
-  )
-}
-
-function FormField({
-  label,
-  htmlFor,
-  error,
-  children,
-}: {
-  label: string
-  htmlFor: string
-  error?: string
-  children: React.ReactNode
-}) {
-  const { c } = useTheme()
-  return (
-    <div>
-      <label
-        htmlFor={htmlFor}
-        style={{
-          display: 'block',
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          color: c.muted,
-          marginBottom: 6,
-        }}
-      >
-        {label}
-      </label>
-      {children}
-      {error && (
-        <p id={`${htmlFor}-error`} role="alert" style={{ marginTop: 5, fontSize: 11.5, fontWeight: 500, color: 'var(--destructive)' }}>
-          {error}
-        </p>
-      )}
-    </div>
   )
 }
 

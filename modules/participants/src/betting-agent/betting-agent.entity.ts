@@ -76,6 +76,29 @@ export class BettingAgent extends Entity<BettingAgent, BettingAgentProps> {
     );
   }
 
+  /**
+   * Altera a política vigente (`enable-betting-agent-policy-update`, D3/D4):
+   * fecha a vigência atual e abre uma nova a partir de `now`, sem apagar a
+   * anterior — o fechamento em si é responsabilidade do repositório
+   * (histórico persistido em tabela dedicada), aqui só validamos a nova
+   * política e avançamos a vigência da entidade em memória.
+   */
+  changePolicy(policy: CompensationPolicyInput, now: Date): Result<BettingAgent> {
+    const policyResult = CompensationPolicy.tryCreate(policy);
+    if (policyResult.isFailure) {
+      return Result.fail(policyResult.errors!);
+    }
+    return Result.ok(
+      new BettingAgent({
+        ...this.props,
+        policy: policyResult.instance.value,
+        policyEffectiveFrom: now,
+        policyEffectiveTo: null,
+        updatedAt: now,
+      }),
+    );
+  }
+
   static create(props: BettingAgentProps): BettingAgent {
     const result = BettingAgent.tryCreate(props);
     result.validator.throwsIfFailed();

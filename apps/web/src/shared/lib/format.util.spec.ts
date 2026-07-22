@@ -7,10 +7,11 @@ import {
 } from './format.util'
 
 describe('format.util', () => {
-  it('initials extrai até 2 letras maiúsculas do nome', () => {
+  it('initials extrai primeiro nome + sobrenome (último nome), ignorando nomes do meio', () => {
     expect(initials('João Silva')).toBe('JS')
     expect(initials('Maria')).toBe('M')
-    expect(initials('Ana Paula Costa')).toBe('AP')
+    expect(initials('Ana Paula Costa')).toBe('AC')
+    expect(initials('Gustavo de Avelar França')).toBe('GF')
   })
 
   it('formatCurrency preserva o sinal nativo do toLocaleString (comportamento de lancamentos)', () => {

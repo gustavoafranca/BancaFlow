@@ -7,7 +7,9 @@ import { Drawer, DrawerContent, DrawerBody, DrawerFooter } from '@/shared/compon
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Badge } from '@/shared/components/ui/badge'
-import { PhoneInput } from '@/shared/components/ui/phone-input'
+import { FormField } from '@/shared/components/ui/form-field'
+import { ReadOnlyField } from '@/shared/components/ui/read-only-field'
+import { PhoneInput, formatBrazilianPhone } from '@/shared/components/ui/phone-input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/components/ui/tabs'
 import {
   Select,
@@ -23,6 +25,7 @@ import {
   create,
   update,
   setStatus,
+  updatePolicy,
   type CompensationPolicyInput,
   type CompensationPolicyType,
   type BettingAgentDetail,
@@ -35,9 +38,11 @@ import {
 import {
   createBettingAgentSchema,
   updateBettingAgentSchema,
+  updateBettingAgentPolicySchema,
   PhoneField,
   type CreateBettingAgentFormData,
   type UpdateBettingAgentFormData,
+  type UpdateBettingAgentPolicyFormData,
 } from '../data/betting-agent.schema'
 
 const POLICY_LABELS: Record<CompensationPolicyType, string> = {
@@ -249,26 +254,26 @@ function CreateForm({
         title="Novo Cambista"
         description="Código e política são obrigatórios. Nome, apelido, telefones e endereço são opcionais."
       >
-        <DrawerBody className="p-5">
-          <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-            <Tabs defaultValue="cadastro">
-              <TabsList>
-                <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
-                <TabsTrigger value="endereco">Endereço</TabsTrigger>
-                <TabsTrigger value="contato">Contato</TabsTrigger>
-              </TabsList>
+        <form onSubmit={submit} noValidate className="flex flex-1 flex-col overflow-hidden">
+          <Tabs defaultValue="cadastro" className="flex flex-1 flex-col overflow-hidden">
+            <TabsList className="mx-5 mt-3">
+              <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
+              <TabsTrigger value="endereco">Endereço</TabsTrigger>
+              <TabsTrigger value="contato">Contato</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="cadastro" className="flex flex-col gap-4">
-                <Field label="Código / Talão" htmlFor="ba-code" error={errors.code?.message}>
+            <DrawerBody className="flex flex-col gap-4 p-5 pt-4">
+              <TabsContent value="cadastro" className="mt-0 flex flex-col gap-4">
+                <FormField label="Código / Talão" htmlFor="ba-code" error={errors.code?.message}>
                   <Input id="ba-code" inputMode="numeric" autoComplete="off" {...register('code')} />
                   {codeConflict && (
                     <p role="alert" className="mt-1 text-[11.5px] text-destructive">
                       Este código já está em uso nesta Banca. Escolha outro.
                     </p>
                   )}
-                </Field>
+                </FormField>
 
-                <Field label="Tipo de política" htmlFor="ba-policy">
+                <FormField label="Tipo de política" htmlFor="ba-policy">
                   <Select
                     value={policyType}
                     onValueChange={(next) => setValue('policyType', next as CompensationPolicyType)}
@@ -284,16 +289,16 @@ function CreateForm({
                       ))}
                     </SelectContent>
                   </Select>
-                </Field>
+                </FormField>
 
                 {showPercentage && (
-                  <Field label="Percentual (%)" htmlFor="ba-pct" error={errors.percentage?.message}>
+                  <FormField label="Percentual (%)" htmlFor="ba-pct" error={errors.percentage?.message}>
                     <Input id="ba-pct" inputMode="decimal" autoComplete="off" {...register('percentage')} />
-                  </Field>
+                  </FormField>
                 )}
 
                 {showWeekly && (
-                  <Field
+                  <FormField
                     label="Valor fixo semanal (R$)"
                     htmlFor="ba-weekly"
                     error={errors.weeklyFixedAmount?.message}
@@ -304,53 +309,53 @@ function CreateForm({
                       autoComplete="off"
                       {...register('weeklyFixedAmount')}
                     />
-                  </Field>
+                  </FormField>
                 )}
 
-                <Field label="Nome (opcional)" htmlFor="ba-name" error={errors.name?.message}>
+                <FormField label="Nome (opcional)" htmlFor="ba-name" error={errors.name?.message}>
                   <Input id="ba-name" autoComplete="off" {...register('name')} />
-                </Field>
+                </FormField>
 
-                <Field label="Apelido (opcional)" htmlFor="ba-nick" error={errors.nickname?.message}>
+                <FormField label="Apelido (opcional)" htmlFor="ba-nick" error={errors.nickname?.message}>
                   <Input id="ba-nick" autoComplete="off" {...register('nickname')} />
-                </Field>
+                </FormField>
               </TabsContent>
 
-              <TabsContent value="endereco" className="flex flex-col gap-4">
-                <Field label="Rua (opcional)" htmlFor="ba-street" error={errors.street?.message}>
+              <TabsContent value="endereco" className="mt-0 flex flex-col gap-4">
+                <FormField label="Rua (opcional)" htmlFor="ba-street" error={errors.street?.message}>
                   <Input id="ba-street" autoComplete="off" {...register('street')} />
-                </Field>
-                <Field label="Número (opcional)" htmlFor="ba-number" error={errors.number?.message}>
+                </FormField>
+                <FormField label="Número (opcional)" htmlFor="ba-number" error={errors.number?.message}>
                   <Input id="ba-number" autoComplete="off" {...register('number')} />
-                </Field>
-                <Field
+                </FormField>
+                <FormField
                   label="Bairro (obrigatório com endereço)"
                   htmlFor="ba-hood"
                   error={errors.neighborhood?.message}
                 >
                   <Input id="ba-hood" autoComplete="off" {...register('neighborhood')} />
-                </Field>
-                <Field
+                </FormField>
+                <FormField
                   label="Cidade (obrigatória com endereço)"
                   htmlFor="ba-city"
                   error={errors.city?.message}
                 >
                   <Input id="ba-city" autoComplete="off" {...register('city')} />
-                </Field>
+                </FormField>
               </TabsContent>
 
-              <TabsContent value="contato">
+              <TabsContent value="contato" className="mt-0">
                 <PhoneListEditor phones={phones} onChange={setPhones} />
               </TabsContent>
-            </Tabs>
 
-            {candidates && candidates.length > 0 && (
-              <DuplicateAlert candidates={candidates} onConfirm={confirmAndResubmit} disabled={isSubmitting} />
-            )}
+              {candidates && candidates.length > 0 && (
+                <DuplicateAlert candidates={candidates} onConfirm={confirmAndResubmit} disabled={isSubmitting} />
+              )}
 
-            {banner && <ErrorBanner>{CREATE_BANNER_MESSAGES[banner]}</ErrorBanner>}
-          </form>
-        </DrawerBody>
+              {banner && <ErrorBanner>{CREATE_BANNER_MESSAGES[banner]}</ErrorBanner>}
+            </DrawerBody>
+          </Tabs>
+        </form>
 
         <DrawerFooter
           mode="create"
@@ -470,6 +475,35 @@ const EDIT_BANNER_MESSAGES: Record<Exclude<EditSubmitStatus, null>, string> = {
   error: 'Não foi possível salvar as alterações agora. Tente novamente.',
 }
 
+function phonesFromAgent(agent: BettingAgentDetail): PhoneRow[] {
+  return agent.party.contacts.length > 0
+    ? agent.party.contacts.map((c) => ({ phone: c.phone, label: c.label ?? '' }))
+    : [{ phone: '', label: '' }]
+}
+
+function formDefaultsFromAgent(agent: BettingAgentDetail): UpdateBettingAgentFormData {
+  return {
+    name: agent.party.name ?? undefined,
+    nickname: agent.party.nickname ?? undefined,
+    street: agent.party.address?.street ?? undefined,
+    number: agent.party.address?.number ?? undefined,
+    neighborhood: agent.party.address?.neighborhood ?? undefined,
+    city: agent.party.address?.city ?? undefined,
+  }
+}
+
+/** Defaults do form de política (`enable-betting-agent-policy-update`) — contrato/form dedicados (D2/D5). */
+function policyFormDefaultsFromAgent(agent: BettingAgentDetail): UpdateBettingAgentPolicyFormData {
+  return {
+    policyType: agent.policy.type,
+    percentage: agent.policy.percentage !== null ? String(agent.policy.percentage) : undefined,
+    weeklyFixedAmount:
+      agent.policy.weeklyFixedAmountCents !== null
+        ? String(agent.policy.weeklyFixedAmountCents / 100)
+        : undefined,
+  }
+}
+
 function AgentDetail({
   agent,
   open,
@@ -494,30 +528,47 @@ function AgentDetail({
     formState: { errors, isSubmitting },
   } = useForm<UpdateBettingAgentFormData>({ resolver: v.resolver(updateBettingAgentSchema) })
 
+  // Contrato/form de política dedicados (D2/D5) — mesma permissão de
+  // `canUpdate` (D1: sem chave dedicada para política).
+  const canEditPolicy = canUpdate
+  const {
+    register: registerPolicy,
+    handleSubmit: handleSubmitPolicy,
+    watch: watchPolicy,
+    setValue: setValuePolicy,
+    reset: resetPolicy,
+    formState: { errors: policyErrors },
+  } = useForm<UpdateBettingAgentPolicyFormData>({ resolver: v.resolver(updateBettingAgentPolicySchema) })
+  const editPolicyType = watchPolicy('policyType')
+  const showEditPercentage =
+    editPolicyType === 'PERCENTAGE_ON_SALES' ||
+    editPolicyType === 'FIXED_WEEKLY_PLUS_PERCENTAGE_ON_SALES'
+  const showEditWeekly =
+    editPolicyType === 'FIXED_WEEKLY' || editPolicyType === 'FIXED_WEEKLY_PLUS_PERCENTAGE_ON_SALES'
+
   const [lastAgentId, setLastAgentId] = useState<string | null>(null)
   if (agent && agent.id !== lastAgentId) {
     setLastAgentId(agent.id)
     setDetailMode('view')
     setEditSubmitStatus(null)
     setStatusError(false)
-    setPhones(
-      agent.party.contacts.length > 0
-        ? agent.party.contacts.map((c) => ({ phone: c.phone, label: c.label ?? '' }))
-        : [{ phone: '', label: '' }],
-    )
+    setPhones(phonesFromAgent(agent))
   }
 
   useEffect(() => {
     if (!agent) return
-    reset({
-      name: agent.party.name ?? undefined,
-      nickname: agent.party.nickname ?? undefined,
-      street: agent.party.address?.street ?? undefined,
-      number: agent.party.address?.number ?? undefined,
-      neighborhood: agent.party.address?.neighborhood ?? undefined,
-      city: agent.party.address?.city ?? undefined,
-    })
-  }, [agent, reset])
+    reset(formDefaultsFromAgent(agent))
+    resetPolicy(policyFormDefaultsFromAgent(agent))
+  }, [agent, reset, resetPolicy])
+
+  function cancelEdit() {
+    if (!agent) return
+    setDetailMode('view')
+    setEditSubmitStatus(null)
+    setPhones(phonesFromAgent(agent))
+    reset(formDefaultsFromAgent(agent))
+    resetPolicy(policyFormDefaultsFromAgent(agent))
+  }
 
   const submit = handleSubmit(async (data) => {
     if (!agent) return
@@ -526,6 +577,23 @@ function AgentDetail({
     if (hasInvalidPhone(phones)) {
       setEditSubmitStatus('invalid')
       return
+    }
+
+    if (canEditPolicy) {
+      const policyData = await new Promise<UpdateBettingAgentPolicyFormData | null>((resolve) => {
+        void handleSubmitPolicy(
+          (data) => resolve(data),
+          () => resolve(null),
+        )()
+      })
+      if (!policyData) return
+
+      const policyInput = buildPolicy(policyData.policyType, policyData.percentage, policyData.weeklyFixedAmount)
+      const policyResult = await updatePolicy(agent.id, { policy: policyInput })
+      if (policyResult.status !== 'success') {
+        setEditSubmitStatus(policyResult.status)
+        return
+      }
     }
 
     const hasAddress = Boolean(data.neighborhood && data.city)
@@ -579,126 +647,180 @@ function AgentDetail({
         description={agent && `Código ${agent.code}`}
       >
         {agent && (
-          <DrawerBody className="flex flex-col gap-5 p-5 pt-1">
-            {canUpdate && (
-              <section>
-                <h2 className="mb-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  Status
-                </h2>
-                <SelectionButtonGroup
-                  aria-label="Status do Cambista"
-                  value={agent.status}
-                  onValueChange={(next) => void toggleStatus(next as BettingAgentStatus)}
-                  options={STATUS_SELECTION_OPTIONS}
-                />
-                {statusError && <ErrorBanner>Não foi possível alterar o status agora.</ErrorBanner>}
-              </section>
-            )}
+          <form onSubmit={submit} noValidate className="flex flex-1 flex-col overflow-hidden">
+            <Tabs defaultValue="cadastro" className="flex flex-1 flex-col overflow-hidden">
+              <TabsList className="mx-5 mt-3">
+                <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
+                <TabsTrigger value="endereco">Endereço</TabsTrigger>
+                <TabsTrigger value="contato">Contato</TabsTrigger>
+              </TabsList>
 
-            <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-              <Tabs defaultValue="cadastro">
-                <TabsList>
-                  <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
-                  <TabsTrigger value="endereco">Endereço</TabsTrigger>
-                  <TabsTrigger value="contato">Contato</TabsTrigger>
-                </TabsList>
+              <DrawerBody className="flex flex-col gap-4 p-5 pt-4">
+                <TabsContent value="cadastro" className="mt-0 flex flex-col gap-4">
+                  {canUpdate && (
+                    <section>
+                      <h2 className="mb-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        Status
+                      </h2>
+                      <SelectionButtonGroup
+                        aria-label="Status do Cambista"
+                        value={agent.status}
+                        onValueChange={(next) => void toggleStatus(next as BettingAgentStatus)}
+                        options={STATUS_SELECTION_OPTIONS}
+                      />
+                      {statusError && <ErrorBanner>Não foi possível alterar o status agora.</ErrorBanner>}
+                    </section>
+                  )}
 
-                <TabsContent value="cadastro" className="flex flex-col gap-4">
-                  <ReadOnlyField label="Código" value={agent.code} />
                   {isViewMode ? (
                     <>
+                      <ReadOnlyField label="Código / Talão" value={agent.code} />
                       <ReadOnlyField label="Nome" value={agent.party.name ?? '—'} />
                       <ReadOnlyField label="Apelido" value={agent.party.nickname ?? '—'} />
+                      <ReadOnlyField label="Política (não editável)" value={formatPolicyLabel(agent)} />
                     </>
                   ) : (
                     <>
-                      <Field label="Nome (opcional)" htmlFor="edit-ba-name" error={errors.name?.message}>
+                      <ReadOnlyField label="Código" value={agent.code} />
+                      <FormField label="Nome (opcional)" htmlFor="edit-ba-name" error={errors.name?.message}>
                         <Input id="edit-ba-name" autoComplete="off" {...register('name')} />
-                      </Field>
-                      <Field
+                      </FormField>
+                      <FormField
                         label="Apelido (opcional)"
                         htmlFor="edit-ba-nick"
                         error={errors.nickname?.message}
                       >
                         <Input id="edit-ba-nick" autoComplete="off" {...register('nickname')} />
-                      </Field>
+                      </FormField>
+                      {canEditPolicy ? (
+                        <>
+                          <FormField label="Tipo de política" htmlFor="edit-ba-policy">
+                            <Select
+                              value={editPolicyType}
+                              onValueChange={(next) =>
+                                setValuePolicy('policyType', next as CompensationPolicyType)
+                              }
+                            >
+                              <SelectTrigger id="edit-ba-policy">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(Object.keys(POLICY_LABELS) as CompensationPolicyType[]).map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {POLICY_LABELS[t]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormField>
+                          {showEditPercentage && (
+                            <FormField
+                              label="Percentual (%)"
+                              htmlFor="edit-ba-pct"
+                              error={policyErrors.percentage?.message}
+                            >
+                              <Input
+                                id="edit-ba-pct"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                {...registerPolicy('percentage')}
+                              />
+                            </FormField>
+                          )}
+                          {showEditWeekly && (
+                            <FormField
+                              label="Valor fixo semanal (R$)"
+                              htmlFor="edit-ba-weekly"
+                              error={policyErrors.weeklyFixedAmount?.message}
+                            >
+                              <Input
+                                id="edit-ba-weekly"
+                                inputMode="decimal"
+                                autoComplete="off"
+                                {...registerPolicy('weeklyFixedAmount')}
+                              />
+                            </FormField>
+                          )}
+                        </>
+                      ) : (
+                        <ReadOnlyField label="Política (não editável)" value={formatPolicyLabel(agent)} />
+                      )}
                     </>
                   )}
-                  <ReadOnlyField
-                    label="Política (não editável)"
-                    value={`${POLICY_LABELS[agent.policy.type]}${
-                      agent.policy.percentage !== null ? ` · ${agent.policy.percentage}%` : ''
-                    }${
-                      agent.policy.weeklyFixedAmountCents !== null
-                        ? ` · ${formatCentsToReais(agent.policy.weeklyFixedAmountCents)}`
-                        : ''
-                    }`}
-                  />
                 </TabsContent>
 
-                <TabsContent value="endereco" className="flex flex-col gap-4">
-                  {isViewMode ? (
-                    <ReadOnlyField
-                      label="Endereço"
-                      value={
-                        agent.party.address
-                          ? `${agent.party.address.street ?? ''}${
-                              agent.party.address.number ? `, ${agent.party.address.number}` : ''
-                            }${agent.party.address.street ? ' — ' : ''}${agent.party.address.neighborhood}, ${agent.party.address.city}`
-                          : '—'
-                      }
-                    />
+                <TabsContent value="endereco" className="mt-0 flex flex-col gap-4">
+                  {isViewMode && !agent.party.address ? (
+                    <EmptyState>Nenhum endereço cadastrado.</EmptyState>
+                  ) : isViewMode ? (
+                    <>
+                      <ReadOnlyField label="Rua" value={agent.party.address?.street ?? '—'} />
+                      <ReadOnlyField label="Número" value={agent.party.address?.number ?? '—'} />
+                      <ReadOnlyField label="Bairro" value={agent.party.address?.neighborhood ?? '—'} />
+                      <ReadOnlyField label="Cidade" value={agent.party.address?.city ?? '—'} />
+                    </>
                   ) : (
                     <>
-                      <Field label="Rua (opcional)" htmlFor="edit-ba-street" error={errors.street?.message}>
+                      <FormField label="Rua (opcional)" htmlFor="edit-ba-street" error={errors.street?.message}>
                         <Input id="edit-ba-street" autoComplete="off" {...register('street')} />
-                      </Field>
-                      <Field
+                      </FormField>
+                      <FormField
                         label="Número (opcional)"
                         htmlFor="edit-ba-number"
                         error={errors.number?.message}
                       >
                         <Input id="edit-ba-number" autoComplete="off" {...register('number')} />
-                      </Field>
-                      <Field
+                      </FormField>
+                      <FormField
                         label="Bairro (obrigatório com endereço)"
                         htmlFor="edit-ba-hood"
                         error={errors.neighborhood?.message}
                       >
                         <Input id="edit-ba-hood" autoComplete="off" {...register('neighborhood')} />
-                      </Field>
-                      <Field
+                      </FormField>
+                      <FormField
                         label="Cidade (obrigatória com endereço)"
                         htmlFor="edit-ba-city"
                         error={errors.city?.message}
                       >
                         <Input id="edit-ba-city" autoComplete="off" {...register('city')} />
-                      </Field>
+                      </FormField>
                     </>
                   )}
                 </TabsContent>
 
-                <TabsContent value="contato">
+                <TabsContent value="contato" className="mt-0">
                   {isViewMode ? (
-                    <ReadOnlyField
-                      label="Telefones"
-                      value={
-                        agent.party.contacts.length > 0
-                          ? agent.party.contacts
-                              .map((c) => (c.label ? `${c.phone} (${c.label})` : c.phone))
-                              .join(', ')
-                          : '—'
-                      }
-                    />
+                    agent.party.contacts.length > 0 ? (
+                      <ul className="flex flex-col gap-2">
+                        {agent.party.contacts.map((contact, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center justify-between rounded-[10px] border border-border bg-secondary/40 p-3"
+                          >
+                            <span className="text-[13.5px] text-foreground">
+                              {formatBrazilianPhone(contact.phone)}
+                            </span>
+                            {contact.label && (
+                              <span className="text-[11px] font-medium text-muted-foreground">
+                                {contact.label}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <EmptyState>Nenhum telefone cadastrado.</EmptyState>
+                    )
                   ) : (
                     <PhoneListEditor phones={phones} onChange={setPhones} />
                   )}
                 </TabsContent>
-              </Tabs>
 
-              {editSubmitStatus && <ErrorBanner>{EDIT_BANNER_MESSAGES[editSubmitStatus]}</ErrorBanner>}
-            </form>
-          </DrawerBody>
+                {editSubmitStatus && <ErrorBanner>{EDIT_BANNER_MESSAGES[editSubmitStatus]}</ErrorBanner>}
+              </DrawerBody>
+            </Tabs>
+          </form>
         )}
 
         {isViewMode ? (
@@ -711,6 +833,7 @@ function AgentDetail({
           <DrawerFooter
             mode="edit"
             onClose={() => onOpenChange(false)}
+            onCancel={cancelEdit}
             onSave={() => void submit()}
             loading={isSubmitting}
           />
@@ -720,43 +843,21 @@ function AgentDetail({
   )
 }
 
-function ReadOnlyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
-      <span className="text-[13.5px] text-foreground">{value}</span>
-    </div>
-  )
+function formatPolicyLabel(agent: BettingAgentDetail): string {
+  return `${POLICY_LABELS[agent.policy.type]}${
+    agent.policy.percentage !== null ? ` · ${agent.policy.percentage}%` : ''
+  }${
+    agent.policy.weeklyFixedAmountCents !== null
+      ? ` · ${formatCentsToReais(agent.policy.weeklyFixedAmountCents)}`
+      : ''
+  }`
 }
 
-function Field({
-  label,
-  htmlFor,
-  error,
-  children,
-}: {
-  label: string
-  htmlFor: string
-  error?: string
-  children: React.ReactNode
-}) {
+function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
-      >
-        {label}
-      </label>
+    <p className="rounded-[10px] border border-dashed border-border p-3 text-[12.5px] text-muted-foreground">
       {children}
-      {error && (
-        <p id={`${htmlFor}-error`} role="alert" className="mt-1 text-[11.5px] font-medium text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
+    </p>
   )
 }
 

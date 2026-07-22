@@ -278,3 +278,46 @@ export async function setStatus(id: string, status: BettingAgentStatus): Promise
   if (res.status === 404) return { status: 'not_found' }
   return { status: 'error' }
 }
+
+export interface UpdateBettingAgentPolicyInput {
+  policy: CompensationPolicyInput
+}
+
+interface CompensationPolicyValueView {
+  type: CompensationPolicyType
+  percentage: number | null
+  weeklyFixedAmountCents: number | null
+}
+
+export type UpdatePolicyResult =
+  | { status: 'success'; data: { bettingAgentId: string; policy: CompensationPolicyValueView } }
+  | { status: 'not_found' }
+  | { status: 'forbidden' }
+  | { status: 'invalid' }
+  | { status: 'error' }
+
+export async function updatePolicy(
+  id: string,
+  input: UpdateBettingAgentPolicyInput,
+): Promise<UpdatePolicyResult> {
+  let res: Response
+  try {
+    res = await fetchWithRefresh(`${BASE}/${encodeURIComponent(id)}/policy`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    return { status: 'error' }
+  }
+
+  if (res.ok) {
+    const body = await safeJson<{ bettingAgentId: string; policy: CompensationPolicyValueView }>(res)
+    if (!body) return { status: 'error' }
+    return { status: 'success', data: body }
+  }
+  if (res.status === 403) return { status: 'forbidden' }
+  if (res.status === 404) return { status: 'not_found' }
+  if (res.status === 400 || res.status === 409) return { status: 'invalid' }
+  return { status: 'error' }
+}

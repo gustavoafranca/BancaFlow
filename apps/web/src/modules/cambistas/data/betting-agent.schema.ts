@@ -121,11 +121,33 @@ export const createBettingAgentSchema = v
 export type CreateBettingAgentFormData = v.infer<typeof createBettingAgentSchema>
 
 /**
- * Schema de edição (`PATCH /:id`): sem `code` (somente leitura no modo edit)
- * nem campos de política (não editável nesta change). `phones` fica fora do
- * schema RHF — o validador `v` local só cobre campos escalares — e é
- * validado item a item via `PhoneField` no drawer, mesmo padrão já usado
- * para a lista de telefones da criação.
+ * Schema de edição da política (`PATCH /:id/policy`, `enable-betting-agent-
+ * policy-update`), separado do schema de perfil abaixo — endpoint/contrato
+ * dedicado (D2), reaproveita os mesmos VOs/`.refine()` de `createBettingAgentSchema`.
+ */
+export const updateBettingAgentPolicySchema = v
+  .defineObject({
+    policyType: PolicyTypeField,
+    percentage: { vo: PercentageField, optional: true },
+    weeklyFixedAmount: { vo: WeeklyAmountField, optional: true },
+  })
+  .refine((data) => !requiresPercentage(data.policyType) || data.percentage !== undefined, {
+    message: 'Informe o percentual para este tipo de política.',
+    field: 'percentage',
+  })
+  .refine((data) => !requiresWeeklyAmount(data.policyType) || data.weeklyFixedAmount !== undefined, {
+    message: 'Informe o valor fixo semanal para este tipo de política.',
+    field: 'weeklyFixedAmount',
+  })
+
+export type UpdateBettingAgentPolicyFormData = v.infer<typeof updateBettingAgentPolicySchema>
+
+/**
+ * Schema de edição (`PATCH /:id`): sem `code` (somente leitura no modo edit).
+ * Política tem contrato/schema próprios (`updateBettingAgentPolicySchema`,
+ * D2). `phones` fica fora do schema RHF — o validador `v` local só cobre
+ * campos escalares — e é validado item a item via `PhoneField` no drawer,
+ * mesmo padrão já usado para a lista de telefones da criação.
  */
 export const updateBettingAgentSchema = v
   .defineObject({

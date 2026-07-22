@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useTheme } from '@/shared/theme/theme-provider'
 import { useHasPermission } from '@/shared/session/use-permissions'
-import { IconPlus, IconUsers, IconSearch } from '@/shared/components/icons'
+import { IconPlus, IconUsers, IconCheck, IconX, IconSearch } from '@/shared/components/icons'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
 import { Badge } from '@/shared/components/ui/badge'
@@ -15,6 +14,7 @@ import {
   TableHead,
   TableCell,
 } from '@/shared/components/ui/table'
+import { initials, avatarGradientClass } from '@/shared/lib/format.util'
 import {
   list,
   getById,
@@ -33,7 +33,6 @@ type ListState =
   | { status: 'success'; page: PaginatedResult<BettingAgentListItem> }
 
 export function CambistasPage() {
-  const { c } = useTheme()
   const canCreate = useHasPermission('participants.betting-agents.create')
 
   const [state, setState] = useState<ListState>({ status: 'loading' })
@@ -45,17 +44,35 @@ export function CambistasPage() {
   const [detail, setDetail] = useState<BettingAgentDetail | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
-  const load = useCallback(async () => {
+  // Reseta para "loading" durante a própria renderização quando busca/página
+  // mudam, em vez de dentro do efeito (proibido por
+  // `react-hooks/set-state-in-effect`) — mesmo padrão de `useUserAccounts`
+  // (`modules/configuracoes/hooks/use-user-accounts.ts`).
+  const requestKey = `${appliedSearch}|${page}`
+  const [lastRequestKey, setLastRequestKey] = useState(requestKey)
+  if (requestKey !== lastRequestKey) {
+    setLastRequestKey(requestKey)
     setState({ status: 'loading' })
+  }
+
+  const load = useCallback(async () => {
     const result = await list({ search: appliedSearch || undefined, page, pageSize: PAGE_SIZE })
     if (result.status === 'success') setState({ status: 'success', page: result.data })
-    else if (result.status === 'forbidden') setState({ status: 'forbidden' })
-    else setState({ status: 'error' })
+    else setState({ status: result.status })
   }, [appliedSearch, page])
 
   useEffect(() => {
-    void load()
-  }, [load])
+    let cancelled = false
+    list({ search: appliedSearch || undefined, page, pageSize: PAGE_SIZE }).then((result) => {
+      if (cancelled) return
+      if (result.status === 'success') setState({ status: 'success', page: result.data })
+      else setState({ status: result.status })
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `requestKey` já resume `appliedSearch`/`page`.
+  }, [requestKey])
 
   function applySearch(e: React.FormEvent) {
     e.preventDefault()
@@ -78,117 +95,88 @@ export function CambistasPage() {
     if (result.status === 'success') setDetail(result.data)
   }
 
-  // Calcula stats com base nos dados carregados
+  // Stats: total é global (`meta.total`); Ativos/Inativos são calculados só a
+  // partir da página carregada (`state.page.data`) — agregados globais
+  // exigiriam mudança de contrato de backend (fora de escopo desta change),
+  // por isso o rótulo do card deixa o escopo "nesta página" explícito em vez
+  // de sugerir um total coerente com a paginação.
   const stats =
     state.status === 'success'
       ? {
           total: state.page.meta.total,
           ativos: state.page.data.filter((x) => x.status === 'ACTIVE').length,
           inativos: state.page.data.filter((x) => x.status === 'INACTIVE').length,
-          taloes: state.page.meta.total,
         }
-      : { total: 0, ativos: 0, inativos: 0, taloes: 0 }
+      : { total: 0, ativos: 0, inativos: 0 }
 
   return (
-    <div style={{ padding: '26px 28px' }}>
-      {/* Page header com descrição */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 20 }}>
+    <div className="p-[26px_28px]">
+      <div className="mb-6 flex items-start justify-between gap-5">
         <div>
-          <h1 style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-0.025em', color: c.text, marginBottom: 5 }}>
+          <h1 className="mb-1.5 text-[21px] font-extrabold tracking-[-0.025em] text-foreground">
             Cambistas
           </h1>
-          <p style={{ fontSize: 13, color: c.muted, lineHeight: 1.6 }}>
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
             Gerencie cambistas, talões, vínculos e remunerações.
           </p>
         </div>
         {canCreate && (
-          <Button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            style={{ whiteSpace: 'nowrap' }}
-          >
+          <Button type="button" onClick={() => setCreateOpen(true)} className="whitespace-nowrap">
             <IconPlus />
             Adicionar Cambista
           </Button>
         )}
       </div>
 
-      {/* Cards de estatísticas */}
       {state.status !== 'loading' && state.status !== 'error' && state.status !== 'forbidden' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 22 }}>
+        <div className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3.5">
           <StatCard
             icon={<IconUsers size={18} />}
-            iconBg={c.glow}
-            iconBorder={c.glowB}
-            iconColor={c.green}
+            iconClassName="border-[rgba(0,199,115,0.24)] bg-[rgba(0,199,115,0.11)] text-primary"
             value={stats.total}
-            valueColor={c.text}
+            valueClassName="text-foreground"
             label="Total"
           />
           <StatCard
-            icon={<IconAtivo />}
-            iconBg={c.glow}
-            iconBorder={c.glowB}
-            iconColor={c.green}
+            icon={<IconCheck size={18} />}
+            iconClassName="border-[rgba(0,199,115,0.24)] bg-[rgba(0,199,115,0.11)] text-primary"
             value={stats.ativos}
-            valueColor={c.green}
+            valueClassName="text-primary"
             label="Ativos"
+            caption="nesta página"
           />
           <StatCard
-            icon={<IconInativo />}
-            iconBg="rgba(224,85,85,0.1)"
-            iconBorder="rgba(224,85,85,0.22)"
-            iconColor="#E05555"
+            icon={<IconX size={18} />}
+            iconClassName="border-[rgba(224,85,85,0.22)] bg-[rgba(224,85,85,0.1)] text-[#E05555]"
             value={stats.inativos}
-            valueColor="#E05555"
+            valueClassName="text-[#E05555]"
             label="Inativos"
-          />
-          <StatCard
-            icon={<IconTalaoStat />}
-            iconBg="rgba(91,143,212,0.12)"
-            iconBorder="rgba(91,143,212,0.22)"
-            iconColor="#5B8FD4"
-            value={stats.taloes}
-            valueColor="#5B8FD4"
-            label="Talões"
+            caption="nesta página"
           />
         </div>
       )}
 
-      {/* Table card */}
-      <div style={{ background: c.card, border: `1px solid ${c.cardB}`, borderRadius: 16, overflow: 'hidden' }}>
-        {/* Search bar integrada no card */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {state.status !== 'forbidden' && (
           <form
             onSubmit={applySearch}
-            style={{
-              padding: '14px 18px',
-              borderBottom: `1px solid ${c.cardB}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 14,
-            }}
+            className="flex items-center justify-between gap-3.5 border-b border-border p-[14px_18px]"
           >
-            <div style={{ position: 'relative', flex: 1, maxWidth: 300 }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: c.muted }}>
-                <IconSearch size={14} />
-              </span>
+            <div className="max-w-[300px] flex-1">
               <Input
                 aria-label="Buscar por código, nome ou apelido"
                 placeholder="Buscar por código, nome ou apelido..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ paddingLeft: 34, maxWidth: '100%' }}
+                leftIcon={<IconSearch size={14} />}
               />
             </div>
-            <span style={{ fontSize: 12, color: c.muted, whiteSpace: 'nowrap' }}>
+            <span className="whitespace-nowrap text-xs text-muted-foreground">
               {stats.total} cambista{stats.total === 1 ? '' : 's'} cadastrado{stats.total === 1 ? '' : 's'}
             </span>
           </form>
         )}
 
-        {/* Content */}
         {state.status === 'loading' && <StateMessage>Carregando Cambistas…</StateMessage>}
         {state.status === 'error' && (
           <StateMessage>
@@ -211,24 +199,30 @@ export function CambistasPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Código</TableHead>
                   <TableHead>Nome</TableHead>
+                  <TableHead>Código</TableHead>
                   <TableHead>Apelido</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {state.page.data.map((agent) => (
-                  <TableRow
-                    key={agent.id}
-                    onClick={() => void openDetail(agent.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
+                  <TableRow key={agent.id} onClick={() => void openDetail(agent.id)} className="cursor-pointer">
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          aria-hidden="true"
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${avatarGradientClass(agent.id)}`}
+                        >
+                          {initials(agent.name ?? agent.nickname ?? agent.code)}
+                        </div>
+                        <span>{agent.name ?? '—'}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{agent.code}</TableCell>
-                    <TableCell>{agent.name ?? '—'}</TableCell>
                     <TableCell>{agent.nickname ?? '—'}</TableCell>
                     <TableCell>
-                      <Badge variant={agent.status === 'ACTIVE' ? 'success' : 'neutral'}>
+                      <Badge variant={agent.status === 'ACTIVE' ? 'success' : 'danger'}>
                         {agent.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </TableCell>
@@ -259,66 +253,41 @@ export function CambistasPage() {
       />
     </div>
   )
+}
 
-  function StateMessage({ children }: { children: React.ReactNode }) {
-    return (
-      <div style={{ padding: '48px 20px', textAlign: 'center', color: c.muted, fontSize: 14 }}>{children}</div>
-    )
-  }
+function StateMessage({ children }: { children: React.ReactNode }) {
+  return <div className="p-[48px_20px] text-center text-sm text-muted-foreground">{children}</div>
 }
 
 function StatCard({
   icon,
-  iconBg,
-  iconBorder,
-  iconColor,
+  iconClassName,
   value,
-  valueColor,
+  valueClassName,
   label,
+  caption,
 }: {
   icon: React.ReactNode
-  iconBg: string
-  iconBorder: string
-  iconColor: string
+  iconClassName: string
   value: number
-  valueColor: string
+  valueClassName: string
   label: string
+  caption?: string
 }) {
-  const { c } = useTheme()
   return (
-    <div
-      style={{
-        background: c.card,
-        border: `1px solid ${c.cardB}`,
-        borderRadius: 14,
-        padding: '18px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-      }}
-    >
+    <div className="flex items-center gap-3.5 rounded-[14px] border border-border bg-card p-[18px_20px]">
       <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 11,
-          background: iconBg,
-          border: `1px solid ${iconBorder}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: iconColor,
-          flexShrink: 0,
-        }}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] border ${iconClassName}`}
       >
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.04em', color: valueColor, lineHeight: 1.15 }}>
+        <div className={`text-[22px] font-extrabold leading-tight tracking-[-0.04em] ${valueClassName}`}>
           {value}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: c.muted, marginTop: 2 }}>
+        <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
           {label}
+          {caption && <span className="normal-case tracking-normal"> · {caption}</span>}
         </div>
       </div>
     </div>
@@ -338,23 +307,12 @@ function Pagination({
   onPrev: () => void
   onNext: () => void
 }) {
-  const { c } = useTheme()
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderTop: `1px solid ${c.cardB}`,
-        fontSize: 13,
-        color: c.muted,
-      }}
-    >
+    <div className="flex items-center justify-between border-t border-border p-[12px_16px] text-sm text-muted-foreground">
       <span>
         {total} Cambista{total === 1 ? '' : 's'} · página {page} de {Math.max(1, totalPages)}
       </span>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="flex gap-2">
         <Button variant="ghost" disabled={page <= 1} onClick={onPrev}>
           Anterior
         </Button>
@@ -363,33 +321,5 @@ function Pagination({
         </Button>
       </div>
     </div>
-  )
-}
-
-// Icons simples (substituindo os do components/icons que foram removidos)
-function IconAtivo() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8" cy="8" r="6" fill="currentColor" opacity="0.2" />
-      <circle cx="8" cy="8" r="3" fill="currentColor" />
-    </svg>
-  )
-}
-
-function IconInativo() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" opacity="0.2" />
-      <line x1="6" y1="10" x2="10" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function IconTalaoStat() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
-      <line x1="2" y1="5" x2="14" y2="5" stroke="currentColor" strokeWidth="1" opacity="0.5" />
-    </svg>
   )
 }

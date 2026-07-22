@@ -19,4 +19,11 @@ export interface BettingAgentRepository {
 
   /** Persiste uma transição de status (`status`/`updatedAt`); demais campos não são tocados. */
   updateStatus(agent: BettingAgent): Promise<Result<void>>;
+
+  /**
+   * Persiste uma alteração de política: fecha a vigência ativa (`effectiveTo`
+   * = `agent.policyPeriod.effectiveFrom`) e insere `agent.policy` como nova
+   * linha vigente, sem apagar ou sobrescrever a anterior (histórico).
+   */
+  updatePolicy(agent: BettingAgent): Promise<Result<void>>;
 }

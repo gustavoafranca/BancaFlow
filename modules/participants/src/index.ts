@@ -27,6 +27,7 @@ export * from './betting-agent/vo/compensation-policy.vo';
 export * from './betting-agent/use-case/list-betting-agents.use-case';
 export * from './betting-agent/use-case/get-betting-agent.use-case';
 export * from './betting-agent/use-case/set-betting-agent-status.use-case';
+export * from './betting-agent/use-case/update-betting-agent-policy.use-case';
 
 // Casos de uso multi-agregado
 export * from './app/use-case/create-betting-agent.use-case';

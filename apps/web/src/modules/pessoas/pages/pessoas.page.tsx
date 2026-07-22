@@ -351,7 +351,7 @@ export function PessoasPage() {
           }
         >
           <Tabs value={drawerTab} onValueChange={(next) => setDrawerTab(next as DrawerTab)} className="flex flex-1 flex-col overflow-hidden">
-            <TabsList className="mx-4 mt-3 self-start">
+            <TabsList className="mx-4 mt-3">
               <TabsTrigger value="dados">Dados</TabsTrigger>
               <TabsTrigger value="vinculos">Vínculos</TabsTrigger>
             </TabsList>

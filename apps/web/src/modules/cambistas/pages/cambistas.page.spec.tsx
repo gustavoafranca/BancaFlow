@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeProvider } from '@/shared/theme/theme-provider'
 import { CambistasPage } from './cambistas.page'
-import { list, getById, create, update, setStatus } from '../data/betting-agent.client'
+import { list, getById, create, update, setStatus, updatePolicy } from '../data/betting-agent.client'
 import type { BettingAgentDetail, BettingAgentListItem, PaginatedResult } from '../data/betting-agent.client'
 import { useHasPermission } from '@/shared/session/use-permissions'
 
@@ -12,6 +12,7 @@ jest.mock('../data/betting-agent.client', () => ({
   create: jest.fn(),
   update: jest.fn(),
   setStatus: jest.fn(),
+  updatePolicy: jest.fn(),
 }))
 
 jest.mock('@/shared/session/use-permissions', () => ({
@@ -23,6 +24,7 @@ const mockedGet = getById as jest.MockedFunction<typeof getById>
 const mockedCreate = create as jest.MockedFunction<typeof create>
 const mockedUpdate = update as jest.MockedFunction<typeof update>
 const mockedSetStatus = setStatus as jest.MockedFunction<typeof setStatus>
+const mockedUpdatePolicy = updatePolicy as jest.MockedFunction<typeof updatePolicy>
 const mockedUseHasPermission = useHasPermission as jest.MockedFunction<typeof useHasPermission>
 
 function page(data: BettingAgentListItem[], total = data.length): PaginatedResult<BettingAgentListItem> {
@@ -57,6 +59,36 @@ const AGENT_DETAIL: BettingAgentDetail = {
     effectiveTo: null,
   },
   createdAt: '2026-07-01T10:00:00.000Z',
+}
+
+const AGENT_NO_CONTACT: BettingAgentListItem = {
+  id: 'ag-2',
+  code: '002',
+  status: 'INACTIVE',
+  name: null,
+  nickname: null,
+  createdAt: '2026-07-02T10:00:00.000Z',
+}
+
+const AGENT_DETAIL_NO_CONTACT: BettingAgentDetail = {
+  id: 'ag-2',
+  code: '002',
+  status: 'INACTIVE',
+  party: {
+    id: 'p-2',
+    name: null,
+    nickname: null,
+    contacts: [],
+    address: null,
+  },
+  policy: {
+    type: 'FIXED_WEEKLY',
+    percentage: null,
+    weeklyFixedAmountCents: 15000,
+    effectiveFrom: '2026-07-02T10:00:00.000Z',
+    effectiveTo: null,
+  },
+  createdAt: '2026-07-02T10:00:00.000Z',
 }
 
 function renderPage() {
@@ -191,6 +223,10 @@ describe('CambistasPage — modo view/edit (detalhe)', () => {
     mockedList.mockResolvedValue({ status: 'success', data: page([AGENT]) })
     mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL })
     mockedUpdate.mockResolvedValue({ status: 'success', data: { bettingAgentId: 'ag-1', partyId: 'p-1' } })
+    mockedUpdatePolicy.mockResolvedValue({
+      status: 'success',
+      data: { bettingAgentId: 'ag-1', policy: { type: 'PERCENTAGE_ON_SALES', percentage: 10, weeklyFixedAmountCents: null } },
+    })
     renderPage()
     await userEvent.click(await screen.findByRole('cell', { name: 'Carlos Mendes' }))
     const dialog = await screen.findByRole('dialog')
@@ -202,6 +238,11 @@ describe('CambistasPage — modo view/edit (detalhe)', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Salvar Alterações' }))
 
+    await waitFor(() =>
+      expect(mockedUpdatePolicy).toHaveBeenCalledWith('ag-1', {
+        policy: { type: 'PERCENTAGE_ON_SALES', percentage: 10 },
+      }),
+    )
     await waitFor(() =>
       expect(mockedUpdate).toHaveBeenCalledWith(
         'ag-1',
@@ -266,5 +307,114 @@ describe('CambistasPage — permissões', () => {
 
     expect(within(dialog).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
     expect(within(dialog).queryByRole('radiogroup', { name: 'Status do Cambista' })).not.toBeInTheDocument()
+    // Sem permissão de editar, a Política permanece somente-leitura (sem combobox de tipo de política).
+    expect(within(dialog).getByText(/Percentual sobre vendas.*10%/)).toBeInTheDocument()
+    expect(within(dialog).queryByRole('combobox')).not.toBeInTheDocument()
+  })
+})
+
+describe('CambistasPage — drawer: abas acima do Status', () => {
+  it('as abas ficam antes do controle de Status na ordem do documento', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL })
+    renderPage()
+    await userEvent.click(await screen.findByRole('cell', { name: 'Carlos Mendes' }))
+    const dialog = await screen.findByRole('dialog')
+
+    const tablist = within(dialog).getByRole('tablist')
+    const statusGroup = within(dialog).getByRole('radiogroup', { name: 'Status do Cambista' })
+
+    const position = tablist.compareDocumentPosition(statusGroup)
+    expect(Boolean(position & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+  })
+})
+
+describe('CambistasPage — modo view: field cards', () => {
+  it('exibe Cadastro em cartões (Código/Talão, Nome, Apelido, Política)', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL })
+    renderPage()
+    await userEvent.click(await screen.findByRole('cell', { name: 'Carlos Mendes' }))
+    const dialog = await screen.findByRole('dialog')
+
+    expect(within(dialog).getByText('Código / Talão')).toBeInTheDocument()
+    expect(within(dialog).getByText('Nome')).toBeInTheDocument()
+    expect(within(dialog).getByText('Apelido')).toBeInTheDocument()
+    expect(within(dialog).getByText(/Percentual sobre vendas.*10%/)).toBeInTheDocument()
+  })
+
+  it('exibe Endereço como cartões legíveis, não concatenados numa linha só', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL })
+    renderPage()
+    await userEvent.click(await screen.findByRole('cell', { name: 'Carlos Mendes' }))
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Endereço' }))
+
+    expect(within(dialog).getByText('Rua')).toBeInTheDocument()
+    expect(within(dialog).getByText('Rua A')).toBeInTheDocument()
+    expect(within(dialog).getByText('Número')).toBeInTheDocument()
+    expect(within(dialog).getByText('10')).toBeInTheDocument()
+    expect(within(dialog).getByText('Bairro')).toBeInTheDocument()
+    expect(within(dialog).getByText('Centro')).toBeInTheDocument()
+    expect(within(dialog).getByText('Cidade')).toBeInTheDocument()
+    expect(within(dialog).getByText('São Paulo')).toBeInTheDocument()
+  })
+
+  it('exibe Contato com telefone formatado (máscara BR) e rótulo, em vez de unidos por vírgula', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL })
+    renderPage()
+    await userEvent.click(await screen.findByRole('cell', { name: 'Carlos Mendes' }))
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Contato' }))
+
+    expect(within(dialog).getByText('(11) 90000-0001')).toBeInTheDocument()
+    expect(within(dialog).getByText('Celular')).toBeInTheDocument()
+  })
+
+  it('trata Cambista sem endereço e sem telefone com estado vazio explícito', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT_NO_CONTACT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL_NO_CONTACT })
+    renderPage()
+    await userEvent.click(await screen.findByRole('cell', { name: '002' }))
+    const dialog = await screen.findByRole('dialog')
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Endereço' }))
+    expect(within(dialog).getByText('Nenhum endereço cadastrado.')).toBeInTheDocument()
+
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Contato' }))
+    expect(within(dialog).getByText('Nenhum telefone cadastrado.')).toBeInTheDocument()
+  })
+})
+
+describe('CambistasPage — consistência de Badge e cards de estatística', () => {
+  it('Badge "Inativo" usa a mesma variant na lista e no drawer', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT_NO_CONTACT]) })
+    mockedGet.mockResolvedValue({ status: 'success', data: AGENT_DETAIL_NO_CONTACT })
+    renderPage()
+
+    const listBadge = await screen.findByText('Inativo', { selector: 'span' })
+    await userEvent.click(screen.getByRole('cell', { name: '002' }))
+    const dialog = await screen.findByRole('dialog')
+    // O painel de Status (`SelectionButtonGroup`) também tem um botão com o
+    // texto "Inativo" — restringe ao `<span>` do title badge para não colidir.
+    const drawerBadge = within(dialog).getByText('Inativo', { selector: 'span' })
+
+    // Mesma variant `danger` do design system (`badge.tsx`) nos dois lugares —
+    // não comparamos a string inteira porque o drawer soma `shrink-0` extra.
+    expect(listBadge.className).toContain('rgba(224,85,85')
+    expect(drawerBadge.className).toContain('rgba(224,85,85')
+  })
+
+  it('cards de Ativos/Inativos rotulam o escopo "nesta página" e não há card duplicado de Talões', async () => {
+    mockedList.mockResolvedValue({ status: 'success', data: page([AGENT], 50) })
+    renderPage()
+    await screen.findByRole('cell', { name: 'Carlos Mendes' })
+
+    expect(screen.getAllByText(/nesta página/).length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText('Talões')).not.toBeInTheDocument()
   })
 })

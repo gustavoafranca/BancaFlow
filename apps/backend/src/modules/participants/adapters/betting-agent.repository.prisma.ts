@@ -100,6 +100,54 @@ export class BettingAgentRepositoryPrisma implements BettingAgentRepository {
     }
   }
 
+  /**
+   * Fecha a vigência ativa e insere a nova política vigente — mesmo padrão de
+   * `PartyRepositoryPrisma.update()` para endereço (fechar linha ativa, abrir
+   * nova), sem apagar/sobrescrever histórico.
+   */
+  async updatePolicy(agent: BettingAgent): Promise<Result<void>> {
+    try {
+      const client = this.activeClient();
+      const policy = agent.policy.value;
+      const period = agent.policyPeriod;
+
+      const active = await client.bettingAgentCompensationPolicy.findFirst({
+        where: { bettingAgentId: agent.id, effectiveTo: null },
+      });
+      if (active) {
+        await client.bettingAgentCompensationPolicy.update({
+          where: { id: active.id },
+          data: { effectiveTo: period.effectiveFrom },
+        });
+      }
+      await client.bettingAgentCompensationPolicy.create({
+        data: {
+          id: Id.createUUID(),
+          bettingAgentId: agent.id,
+          type: policy.type,
+          percentage: 'percentage' in policy ? policy.percentage : null,
+          weeklyFixedAmountCents:
+            'weeklyFixedAmountCents' in policy
+              ? policy.weeklyFixedAmountCents
+              : null,
+          effectiveFrom: period.effectiveFrom,
+          effectiveTo: period.effectiveTo,
+        },
+      });
+      return Result.ok(undefined);
+    } catch (error: unknown) {
+      return Result.fail(
+        safeErrorCode(
+          error,
+          TECHNICAL_ERROR_CODES.PARTICIPANTS_BETTING_AGENT_SAVE,
+          {
+            operation: 'BettingAgentRepositoryPrisma.updatePolicy',
+          },
+        ),
+      );
+    }
+  }
+
   async findById(
     id: string,
     bancaId: string,
@@ -163,5 +211,4 @@ export class BettingAgentRepositoryPrisma implements BettingAgentRepository {
       updatedAt: row.updatedAt,
     });
   }
-
 }

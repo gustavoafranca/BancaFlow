@@ -151,6 +151,16 @@ export class InMemoryBettingAgentRepository implements BettingAgentRepository {
     return Result.ok();
   }
 
+  failUpdatePolicy = false;
+
+  async updatePolicy(agent: BettingAgent): Promise<Result<void>> {
+    if (this.failUpdatePolicy) {
+      return Result.fail('PARTICIPANTS.TECHNICAL_FAILURE');
+    }
+    this.store.set(agent.id, agent);
+    return Result.ok();
+  }
+
   snapshot(): Map<string, BettingAgent> {
     return new Map(this.store);
   }

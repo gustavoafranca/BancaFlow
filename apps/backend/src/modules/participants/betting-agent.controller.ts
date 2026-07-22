@@ -3,6 +3,7 @@ import type {
   GetBettingAgentUseCase,
   ListBettingAgentsUseCase,
   SetBettingAgentStatusUseCase,
+  UpdateBettingAgentPolicyUseCase,
   UpdateBettingAgentProfileUseCase,
 } from '@bancaflow/participants';
 import { PARTICIPANTS_ERRORS } from '@bancaflow/participants';
@@ -27,13 +28,18 @@ import type { AuthContext } from '../../shared/types/jwt-payload.type';
 import { JwtCookieAuthGuard } from '../identity/guards/jwt-cookie-auth.guard';
 import { CreateBettingAgentDto } from './dto/create-betting-agent.dto';
 import { ListBettingAgentsDto } from './dto/list-betting-agents.dto';
-import { SetBettingAgentStatusDto, UpdateBettingAgentDto } from './dto/update-betting-agent.dto';
+import {
+  SetBettingAgentStatusDto,
+  UpdateBettingAgentDto,
+} from './dto/update-betting-agent.dto';
+import { UpdateBettingAgentPolicyDto } from './dto/update-betting-agent-policy.dto';
 import { unwrapParticipantsResult } from './participants-http.util';
 import {
   CREATE_BETTING_AGENT_USE_CASE,
   GET_BETTING_AGENT_USE_CASE,
   LIST_BETTING_AGENTS_USE_CASE,
   SET_BETTING_AGENT_STATUS_USE_CASE,
+  UPDATE_BETTING_AGENT_POLICY_USE_CASE,
   UPDATE_BETTING_AGENT_PROFILE_USE_CASE,
 } from './participants.tokens';
 
@@ -59,6 +65,8 @@ export class BettingAgentController {
     private readonly updateBettingAgentProfileUseCase: UpdateBettingAgentProfileUseCase,
     @Inject(SET_BETTING_AGENT_STATUS_USE_CASE)
     private readonly setBettingAgentStatusUseCase: SetBettingAgentStatusUseCase,
+    @Inject(UPDATE_BETTING_AGENT_POLICY_USE_CASE)
+    private readonly updateBettingAgentPolicyUseCase: UpdateBettingAgentPolicyUseCase,
   ) {}
 
   @Post()
@@ -172,5 +180,23 @@ export class BettingAgentController {
       }),
     );
     return { bettingAgentId: output.bettingAgentId, status: output.status };
+  }
+
+  @Patch(':id/policy')
+  async updatePolicy(
+    @CurrentUser() user: AuthContext,
+    @CurrentBancaId() bancaId: string,
+    @Param('id') id: string,
+    @Body() body: UpdateBettingAgentPolicyDto,
+  ) {
+    const output = unwrapParticipantsResult(
+      await this.updateBettingAgentPolicyUseCase.execute({
+        id,
+        bancaId,
+        actorRole: user.role,
+        policy: body.policy,
+      }),
+    );
+    return { bettingAgentId: output.bettingAgentId, policy: output.policy };
   }
 }
